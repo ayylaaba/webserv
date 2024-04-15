@@ -21,6 +21,7 @@
 #include <map>
 #include <vector>
 #include "Client.hpp"
+#include "time.h"
 
 
 # define MAX_EVENTS 1024

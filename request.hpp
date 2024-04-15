@@ -33,6 +33,7 @@ class request
         std::string                         rest_fldr;
         std::string                         full_path;
         std::string                         full_rest;
+        std::string                         host;
         size_t                              pos;
         bool                                found;
         bool                                method_state;
@@ -62,7 +63,7 @@ class request
         void                                      print_map(std::map<std::string, std::string> m);
         int                                       rewrite_location(std::map<std::string, std::string> location_map);
         void                                      fill_response_varbls(std::string &path);
-        void                                      parse_header(std::string buffer, server &serv);
+        void                                      parse_header(std::string buffer, server &serv, int fd);
         std::string                               get_delet_resp(std::string path, int stat);
         void                                      fill_extentions();
         std::streampos                            get_fileLenth(std::string path);
@@ -75,8 +76,7 @@ class request
         std::string                                delet_method(std::string path, server &server);
         void                                       parse_req(std::string   rq, server &server, int fd);
         int                                        one_of_allowed(std::string mehod, std::vector<std::string> allowed_methods);
-        int                                        parseHost(std::string hst, server& pars);
-
+        int                                        parseHost(std::string hst, server& pars, int fd);
         template <typename T>
         std::string to_string(T value) 
         {
