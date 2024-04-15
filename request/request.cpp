@@ -49,7 +49,14 @@ void            request::parse_req(std::string   rq, server &server, int fd) // 
     it->second.resp.response_message = server.response_message;
     std::cout << "Full Path = " << uri << std::endl;
     std::cout << " N checkiw Wach L2mor Tayba wla la " << std::endl;
+
     if (http_version.compare("HTTP/1.1"))
+    {
+        state = it->second.resp.response_error("505", fd);    
+        it->second.version_not_suported = 1;
+        return ;
+    }
+    if (vec.size() != 3 || last == std::string::npos)
     {
         state = it->second.resp.response_error("505", fd);    
         it->second.version_not_suported = 1;
@@ -98,17 +105,14 @@ std::string     request:: get_full_uri(server &server, Client& obj)
     int     loca_found = 0;
     longest_loca = find_longest_path(server, obj);
     rest_fldr    = path.substr(longest_loca.length()); 
-    for (size_t i = 0; i < server.s.size(); i++) // which server !! so must not implement this for loop
+    for (size_t j = 0; j < (*it)->l.size(); j++)
     {
-        for (size_t j = 0; j < server.s[i]->l.size(); j++)
-        {
-            if (one_of_allowed(method, server.s[i]->l[j]->allowed_methods))
-                method_state = true;
-            loca_found = rewrite_location(server.s[i]->l[j]->cont_l);
-            if (loca_found)
-                break ;
-            cgi_map = server.s[i]->l[j]->cgi_map;
-        }
+        if (one_of_allowed(method, (*it)->l[j]->allowed_methods))
+            method_state = true;
+        loca_found = rewrite_location((*it)->l[j]->cont_l);
+        if (loca_found)
+            break ;
+        cgi_map = (*it)->l[j]->cgi_map;
     }
     return full_path;
 }

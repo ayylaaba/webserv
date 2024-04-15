@@ -155,9 +155,10 @@ std::string     delete_::delet_method(std::string path, server &server, int fd)
 // }
 
 delete_::delete_(){
+    std::cout << "Delete Method Constructor \n";
 
 }
 
 delete_::~delete_(){
-
+    std::cout << "Delete Method DeConstructor\n";
 }

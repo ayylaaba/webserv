@@ -3,6 +3,10 @@
 
 extern std::map<int, Client> fd_maps;
 
+get_method::get_method(){
+    std::cout << "Get Constructor \n";
+}
+
 int    get_method::get_mthod(int fd)
 {
     std::cout << "--------------- get_mthod --------------------------\n";

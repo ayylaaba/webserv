@@ -3,7 +3,7 @@
 extern std::map<int, Client> fd_maps;
 
 cgi::cgi(){
-    std::cout << "here i am \n";
+    std::cout << "Cgi Constructor \n";
 }
 
 void        cgi::fill_env_cgi(Client &obj)

@@ -6,7 +6,7 @@ extern std::map<int, Client> fd_maps;
 response::response()
 {
         response_message = message_response_stat(); //
-        std::cout << "map size = " <<  response_message.size() << "\n";
+        std::cout << "resp constructor map size = " <<  response_message.size() << "\n";
 }
 
 response::~response(){
@@ -24,6 +24,7 @@ int     response::response_error(std::string stat, int fd)
         
         std::cout << "map size = " <<  response_message.size() << "\n";
         std::cout << "state = " << stat << "\n";
+
         if( it_ != it->second.serv_.err_page.end())
         {
             std::cout << "stat " <<  it_->first << " Path " << it_->second << "\n";
@@ -44,6 +45,8 @@ int     response::response_error(std::string stat, int fd)
         else
         {          
             std::map<std::string, std::string>::iterator it_message_error = response_message.find(stat);
+            if (it_message_error == response_message.end())
+                exit (122);
             std::cout << "here's map size = " <<  response_message.size() << "\n";
             std::string _respond_stat;
             _respond_stat = "<h1>" + it_message_error->second + "</h1>";

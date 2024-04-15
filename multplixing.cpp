@@ -73,7 +73,6 @@ void        multplixing::lanch_server(server parse)
             perror("Bind failed");
             exit(EXIT_FAILURE);
         }
-
         if (listen(sockfd, 5)) {
             perror("Listen failed");
             exit(EXIT_FAILURE);
@@ -112,9 +111,9 @@ void        multplixing::lanch_server(server parse)
         int num = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
         for (int i = 0; i < num; i++) {
             if ((it = std::find(serverSocket.begin(), serverSocket.end(), events[i].data.fd)) != serverSocket.end()) {
+                std::cout << "BEFORE CLIENT FD VALUE :" << events[i].data.fd << std::endl;
                 std::cout << "New Client Connected\n";
                 int client_socket = accept(*it, NULL, NULL);
-
                 struct epoll_event envts_client;
                 envts_client.data.fd = client_socket;
                 envts_client.events = EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLRDHUP | EPOLLHUP ;
@@ -124,9 +123,9 @@ void        multplixing::lanch_server(server parse)
                     perror("Issue In Adding Client To Epoll");
                     exit(1);
                 }
-                fd_maps[events[i].data.fd] = Client();
-                fd_maps[events[i].data.fd].serv_      = parse;
-                parse.req_time[client_socket] = 0;
+                fd_maps[client_socket] = Client();
+                fd_maps[client_socket].serv_      = parse;
+                std::cout << "AFTER CLIENT FD VALUE :" << events[i].data.fd << std::endl;
                 std::cout << "Client " << client_socket << " Added To Map\n";
             }
             else {
@@ -151,26 +150,27 @@ void        multplixing::lanch_server(server parse)
                             continue ;
                     }
                     std::cout << buffer << "\n";
-                    // if (flag == 0)
-                    // {
+
+                    if (flag == 0)
+                    {
                         if (buffer.find("\r\n\r\n") != std::string::npos)
                         {
                             rq.parse_req(buffer, parse, events[i].data.fd );
                             fd_maps[events[i].data.fd].requst     = rq;
-                            std::cout << "SSIZE - = " << rq.response_message.size() << " \n";
                             fd_maps[events[i].data.fd].resp       = resp_;
                             // fd_maps[events[i].data.fd].cgi        = cgi_;
-                            std::cout << " stat = " << it_fd->second.not_allow_method << "\n";
-                            if (it_fd->second.not_allow_method || it_fd->second.version_not_suported)
-                            {
-                                it_fd->second.not_allow_method      = 0;
-                                it_fd->second.version_not_suported  = 0;
-                                if (close_fd( events[i].data.fd ))
-                                    continue ;
-                            }
+                            // std::cout << " stat = " << it_fd->second.not_allow_method << "\n"; Segv
+                            // if (it_fd->second.not_allow_method || it_fd->second.version_not_suported)
+                            // {
+                            //     it_fd->second.not_allow_method      = 0;
+                            //     it_fd->second.version_not_suported  = 0;
+                            //     if (close_fd( events[i].data.fd ))
+                            //         continue ;
+                            // }
                             // flag = 1;
                         }
-                    // }
+                    }
+                    // exit (22);
                     if (rq.method == "POST" && flag == 1 && !it_fd->second.not_allow_method)
                     {
                         fd_maps[events[i].data.fd].post_.j = 0;
@@ -178,6 +178,7 @@ void        multplixing::lanch_server(server parse)
                             fd_maps[events[i].data.fd].post_.j = 1;
                     }
                     fd_maps[events[i].data.fd].u_can_send = 1;
+                            // exit (102);
                     // std::cout << "request_ uri = " << it_fd ->second.requst.uri << "\n";
                     // if (!it_fd->second.cgi.cgi_stat.compare("cgi_state"))
                     // {

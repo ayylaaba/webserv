@@ -20,7 +20,6 @@ int main(int ac, char **av)
         parse.mange_file(av[1]);
     else
         parse.print_err("Argement Not Valid");
-    // parse.message_response_stat();
     // exit(22);
     mlp.lanch_server(parse);
 }

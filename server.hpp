@@ -25,6 +25,9 @@
 class server : public location
 {
     public:
+        std::string                         server_n;
+        std::string                         port;
+        std::string                         id;
         std::string                         listen;
         std::string                         s_root;
         std::string                         _root;
@@ -32,6 +35,7 @@ class server : public location
         std::vector<server*>                s;
         std::vector<location*>              l;
         std::map<std::string, std::string>  cont;
+        std::map<std::string, std::string>  cont_prev;
         location                            obj;
         std::map<std::string, std::string>  err_page;
         std::string                         str;
@@ -42,10 +46,12 @@ class server : public location
         std::string                         check;
         std::map<int, int>                  req_time;
         std::vector<std::string>            indexs;
-        std::map<std::string, std::string>  loca_path;
         std::map<std::string, std::string>  response_message;
         std::vector<std::string>            vec_of_locations;
+        std::vector<std::string>            p_s_id;
 
+        void                                check_duplicate_location(std::vector<std::string> s);
+        void                                check_server_deplicate();
         void                                message_response_stat();
         bool                                isWhitespace(std::string str); 
         int                                 check_stat(std::string &stat_error);
@@ -68,6 +74,8 @@ class server : public location
         int                                 check_ip(std::string ip);
         server(std::map<std::string, std::string> &cont_s, std::vector<location*> &l_, std::vector<std::string> &vec_of_locations_);   
         server();
+
+
 };
 
 #endif

@@ -16,15 +16,7 @@ location::location(std::map<std::string, std::string> &c, std::vector <std::stri
 {
     cont_l = c;
     allowed_methods = v_s;
-    cgi_map = cgi_m;
-    // std::vector<std::string>::iterator it  = vec_locas.begin();
-    // std::vector<std::string>::iterator ite = vec_locas.end();
-    // while (it != ite)
-    // {
-    //     std::cout << "first == " << *it << "\n";
-    //     it++;
-    // }
-    // exit (12);    
+    cgi_map = cgi_m;    
 }
 
 int     location::check_exist(std::string path)
@@ -33,9 +25,7 @@ int     location::check_exist(std::string path)
     if (stat(path.c_str(), &fileStat) == 0) 
     {
         if (S_ISREG(fileStat.st_mode) || S_ISDIR(fileStat.st_mode))
-        {
             return 1; // Path exists and is a regular file
-        }
     }
     return 0;
 } 
@@ -117,11 +107,6 @@ void        location::handl_loca(std::map<std::string, std::string>& m, std::vec
                     print_err("syntaxt_error methods");
             }
         }
-        // if (!(*it).first.compare("autoindex"))
-        // {
-        //     if ((*it).second.compare("on") && (*it).second.compare("off"))
-        //         print_err("syntaxt_error must be 'on' or 'off'");
-        // }
         if (!(*it).first.compare("index")) // most be more than index and most check each one i think.
         {
             std::string path = root + "/" + (*it).second;

@@ -44,6 +44,8 @@ class get_method
         std::string     get_exten_type(std::string path, std::map<std::string, std::string> &exta);
         int             response_error(std::string stat, int fd);          
         std::map<std::string, std::string>             message_response_stat(/*std::map<std::string, std::string> &response_message*/);
+        get_method();
+
         /********************************************/  
         template <typename T>
         std::string to_string(T value) 

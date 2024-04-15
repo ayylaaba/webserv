@@ -52,6 +52,7 @@ class request
         std::map<std::string, std::string>  cgi_map;
         std::map<std::string, std::string>  root_map;
         std::map<std::string, std::string>  response_message;
+        std::vector<server*>::iterator      it;
 
         /*************** REQUEST FUNCTIONS ***************/
 
@@ -74,6 +75,7 @@ class request
         std::string                                delet_method(std::string path, server &server);
         void                                       parse_req(std::string   rq, server &server, int fd);
         int                                        one_of_allowed(std::string mehod, std::vector<std::string> allowed_methods);
+        int                                        parseHost(std::string hst, server& pars);
 
         template <typename T>
         std::string to_string(T value) 

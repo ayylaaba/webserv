@@ -20,7 +20,9 @@ server::server()
     duplicate["root"]           = 0;
     duplicate["allow_methods"]  = 0;
     duplicate["autoindex"]      = 0;
-    duplicate["cgi_status"]      = 0;
+    duplicate["cgi_status"]     = 0;
+    duplicate["upload_path"]    = 0;
+    duplicate["upload"]         = 0;
     message_response_stat();
 }
 
@@ -29,10 +31,6 @@ server::server(std::map<std::string, std::string> &cont_s, std::vector<location*
     cont = cont_s;
     l = l_;
     vec_of_locations = vec_of_locations_;
-    std::vector<std::string>::iterator it = vec_of_locations.begin();
-    std::vector<std::string>::iterator ite = vec_of_locations.end();
-    for(; it != ite; it++)
-        std::cout << "-- first -- " << *it << "\n";
     std::cout << "vec_of_locations size: " << vec_of_locations.size() << "\n";
 }
 
@@ -71,10 +69,38 @@ std::vector<std::string>    server::isolate_str(std::string s, char deli)
     return (vec);
 }
 
+void    server::check_server_deplicate()
+{
+    for (size_t i = 0; i < s.size(); i++)
+    {
+        if (s[i]->cont.find("server_name") == s[i]->cont.end())
+            print_err("SERVER NAME IT'S NOT FOUND");
+        for(size_t j = i + 1; j < s.size(); j++)
+        {
+            if (s[i]->cont["listen"] == s[j]->cont["listen"] && s[i]->cont["host"] == s[j]->cont["host"] 
+                && s[i]->cont["server_name"] == s[j]->cont["server_name"])
+            {
+                print_err ("Duplicate Servers");
+                return ;
+            }
+        }
+    }
+}
+
+void        server::check_duplicate_location(std::vector<std::string> s)
+{
+    for (size_t i = 0; i < s.size(); i++)
+    {
+        for (size_t j = i + 1; j < s.size(); j++)
+        {
+            if (s[i] == s[j])
+                print_err ("Duplicate Location");
+        }
+    }
+}
 
 void        server::mange_file(const char* file)
 {
-    // lfkra = had lfile rdi t9rah fkola server radi parsih plus t stori cola sserver f string ao diro f vector
     std::ifstream   rd_content(file);
     s_token = 0;
     obj.l_token = 0;
@@ -94,6 +120,7 @@ void        server::mange_file(const char* file)
             parse_both(rd_content,str);
             if ((!str.compare("}") && s_token == 1 ))
             {
+                check_duplicate_location(vec_of_locations);
                 s.push_back(new server(cont, l, vec_of_locations));
                 cont.clear();
                 l.clear();
@@ -102,6 +129,7 @@ void        server::mange_file(const char* file)
             }
         }
     }
+    check_server_deplicate();
 }
 
 void           server::message_response_stat()
@@ -138,7 +166,6 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
         if (str_.empty() || isWhitespace(str_) || str[0] == '#')
             continue ;
         l_vec = isolate_str(str_, ' ');
-        std::cout << "str --> " << str << "<--\n";
         if (!l_vec[0].compare("root") || !l_vec[0].compare("index") 
             || !l_vec[0].compare("limit_except") || !l_vec[0].compare("allow_methods") 
             || !l_vec[0].compare("autoindex") || !l_vec[0].compare("upload") 
@@ -166,7 +193,7 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
                 check_dup();
                 cont_l.clear();
                 v_s.clear();
-                cgi_map.clear();
+                // cgi_map.clear();
                 break ;
             }
         }
@@ -183,9 +210,6 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
         {
             check_size(str_l_vec, 'l');
             vec_of_locations.push_back(str_l_vec[1]);
-            std::cout << "/***/ " << str_l_vec[1] << "\n";
-
-            loca_path[str_l_vec[0]] = str_l_vec[1].substr(0, str_l_vec[1].size());
             cont_l[str_l_vec[0]]    = str_l_vec[1].substr(0, str_l_vec[1].size()); // store location with its path
             return 1 ;
         }
@@ -196,7 +220,6 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
         }
     }
     return 1;
-    
 }
 
 int     server::is_num(std::string s)
@@ -246,7 +269,6 @@ int    server::parse_both(std::ifstream& rd_cont, std::string &str_)
 {
     while (std::getline(rd_cont, str_)) // loop to iterate inside server
     {
-        std::cout << "str ---->'" << str << "'\n";
         str_ = strtrim(str_);
         if (str_.empty() || isWhitespace(str_) || str[0] == '#')
             continue ;
@@ -265,8 +287,6 @@ int    server::parse_both(std::ifstream& rd_cont, std::string &str_)
                 if (s_vec[0].compare("{")) // you mean that is not { then it is a location
                 {
                     check_size(s_vec, 'l'); // check first loca's path
-                    std::cout << "loca ----------- " << s_vec[0] << " first root ------- " << s_vec[1] << "\n"; 
-                    loca_path[s_vec[0]] = s_vec[1];
                     vec_of_locations.push_back(s_vec[1]);
                     cont_l[s_vec[0]] = s_vec[1];
                     std::getline(rd_cont, str_);
@@ -288,10 +308,7 @@ int    server::parse_both(std::ifstream& rd_cont, std::string &str_)
             if (!s_vec[0].compare("error_page"))
             {
                 if (check_exist(s_vec[2]) && !check_stat(s_vec[1])) // check also stat lik 404 301 ...
-                {
-                    std::cout << "first = " << check_exist(s_vec[2]) << " second = " << check_stat(s_vec[1]) << "\n";
                     err_page[s_vec[1]] = s_vec[2];
-                }
                 else
                     print_err("syntaxt_error on the error_page");
             }
@@ -377,7 +394,6 @@ void      server::handl_serv(std::vector<std::string> s)
         for (size_t i = 1; i < s.size(); i++)
         {
             indexs.push_back(s[i]);
-            std::cout << "----->>>> " << s[i] << "<<<<-------\n";
             s[1] = s_root + "/" + s[i];
             if (!check_exist(s[1]))
                 print_err("syntaxt_error on index");
@@ -446,9 +462,6 @@ void        server::stor_values(std::vector<std::string> s, char ch)
     }
     else
     {
-        // std::map<std::string, std::string>::iterator it = cont.find(s[0]);
-        // if (it != cont.end())
-        //     print_err("Duplicat on directive's location");
         duplicate.find(s[0])->second++;
         if (!s[0].compare("index"))            
             cont_l[s[0]] = s[1].substr(0, s[1].size());
