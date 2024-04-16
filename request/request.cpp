@@ -35,7 +35,7 @@ int            request::check_cgi_exten(std::string exten)
 
 void            request::parse_req(std::string   rq, server &server, int fd) // you can remove the server argenent
 {
-    parse_header(rq, server, fd);
+    parse_header(rq, server);
     std::map<int, Client>::iterator it = fd_maps.find(fd);
     int             state;
 

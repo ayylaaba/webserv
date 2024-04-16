@@ -2,11 +2,8 @@
 
 #define MAX_CLIENTS 
 
-std::map<int, Client>  fd_maps;
+std::map<int, Client>  fd_maps; 
 int flag = 0;
-
-extern std::map<int, std::vector<server*>::iterator> server_history;
-extern std::map<int, int> client_history;
 
 
 in_addr_t multplixing::convertIpv4toBinary(const std::string& ip) {
@@ -51,10 +48,9 @@ void        multplixing::lanch_server(server parse)
     request     rq;
     response     resp_;
     std::vector<server*>::iterator it;
-    time_t  start;
-    time_t  end;
 
     epoll_fd = epoll_create(5);
+
     for (it = parse.s.begin(); it != parse.s.end(); it++)
     {
         int sockfd;
@@ -63,7 +59,6 @@ void        multplixing::lanch_server(server parse)
             exit(EXIT_FAILURE);
         }
         serverSocket.push_back(sockfd);
-        server_history[sockfd] = it;
 
         sockaddr_in sock_info;
 
@@ -112,7 +107,7 @@ void        multplixing::lanch_server(server parse)
         std::vector<int>::iterator it;
 
         signal(SIGPIPE, SIG_IGN); // magic this line ignore sigpip when you write to close fd the program exit by sigpip sign
-
+        std::cout << "whyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\n";
         int num = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
         for (int i = 0; i < num; i++) {
             if ((it = std::find(serverSocket.begin(), serverSocket.end(), events[i].data.fd)) != serverSocket.end()) {
@@ -130,18 +125,11 @@ void        multplixing::lanch_server(server parse)
                 }
                 fd_maps[client_socket] = Client();
                 fd_maps[client_socket].serv_      = parse;
-                client_history[client_socket] = *it;
-                start = time(NULL);
                 std::cout << "AFTER CLIENT FD VALUE :" << events[i].data.fd << std::endl;
                 std::cout << "Client " << client_socket << " Added To Map\n";
             }
             else {
                 std::map<int, Client>::iterator it_fd = fd_maps.find(events[i].data.fd);
-                end = time(NULL);
-                if (difftime(end, start) > 4) {
-                    std::cerr << "TIMEOUT" << std::endl;
-                    exit(111);
-                }
                 std::cout << "Client with an event :" << events[i].data.fd << std::endl;
                 if (events[i].events & EPOLLRDHUP || events[i].events & EPOLLERR  || events[i].events & EPOLLHUP) 
                 {
@@ -167,7 +155,7 @@ void        multplixing::lanch_server(server parse)
                     {
                         if (buffer.find("\r\n\r\n") != std::string::npos)
                         {
-                            rq.parse_req(buffer, parse, events[i].data.fd);
+                            rq.parse_req(buffer, parse, events[i].data.fd );
                             fd_maps[events[i].data.fd].requst     = rq;
                             fd_maps[events[i].data.fd].resp       = resp_;
                             // fd_maps[events[i].data.fd].cgi        = cgi_;

@@ -67,23 +67,24 @@ int     response::response_error(std::string stat, int fd)
 std::map<std::string, std::string>        response::message_response_stat(/*std::map<std::string, std::string> &response_message*/)
 {
     response_message["200"] = "OK";
-    response_message["201"] = "Created";
-    response_message["202"] = "Accepted";
+    // response_message["201"] = "Created";
+    // response_message["202"] = "Accepted";
     response_message["204"] = "No Content";
     response_message["301"] = "Moved Permanently";
-    response_message["302"] = "Found";
-    response_message["304"] = "Not Modified";
+    // response_message["302"] = "Found";
+    // response_message["304"] = "Not Modified";
     response_message["400"] = "Bad Request";
-    response_message["401"] = "Unauthorized";
+    // response_message["401"] = "Unauthorized";
     response_message["403"] = "Forbidden";
     response_message["404"] = "Not Found";
     response_message["405"] = "Method Not Allowed";
-    response_message["500"] = "Internal Server Error";
-    response_message["505"] = "Version Not Supported";
-    response_message["501"] = "Not Implemented";
-    response_message["502"] = "Bad Gateway";
-    response_message["503"] = "Service Unavailable";
-    response_message["504"] = "Gateway Timeout";
+    response_message["409"] = "Conflict";
+    // response_message["500"] = "Internal Server Error";
+    // response_message["505"] = "Version Not Supported";
+    // response_message["501"] = "Not Implemented";
+    // response_message["502"] = "Bad Gateway";
+    // response_message["503"] = "Service Unavailable";
+    // response_message["504"] = "Gateway Timeout";
     return (response_message);
 }
 
@@ -94,7 +95,7 @@ std::string      response::get_header(std::string wich, std::string exten, std::
     if (it != response_message.end())
     {
         if (!wich.compare("200") || !wich.compare("404") || !wich.compare("403") 
-        || !wich.compare("405") || !wich.compare("204") || !wich.compare("415"))
+        || !wich.compare("405") || !wich.compare("204") || !wich.compare("415") || !wich.compare("409"))
         {
             response = "HTTP/1.1 ";
             response +=  it->first + " " + it->second + "\r\n";

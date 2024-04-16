@@ -1,8 +1,4 @@
 #include "../request.hpp"
-#include "../multplixing.hpp"
-
-std::map<int, std::vector<server*>::iterator> server_history;
-std::map<int, int> client_history;
 
 int isIP(std::string host) {
     int dots = 0;
@@ -20,56 +16,40 @@ int isIP(std::string host) {
     return 0;
 }
 
-std::vector<server*>::iterator getServer(int fd) {
-
-    int client_fd = client_history[fd];
-    std::vector<server*>::iterator server_position = server_history[client_fd];
-    
-    return server_position;
-}
-
-int request::parseHost(std::string hst, server& pars, int fd) {
+int request::parseHost(std::string hst, server& pars) {
     std::string ip;
     std::string port;
     int         ip_port = 0;
-    // for (it = pars.s.begin(); it != pars.s.end(); it++) {
-    //         std::cout << "CONFPORT: '" << (*it)->cont.find("listen")->second << "'" << " INCOMING PORT: '" << port << "'\n";
-    //     if ((*it)->cont.find("listen")->second == port) {
-    //         if ((*it)->cont["server_name"] == hst)
-    //             break;
-    //         if ((*it)->cont.find("host")->second == ip || ip == "localhost") {
-    //             if (ip_port) {
-    //                 break ;
-    //             }
-    //         }
-    //         else
-    //             continue;
-    //     }
-    //     else
-    //         continue;
-    // }
-    // if (it == pars.s.end()) {
-    //     perror("server NOT found");
-    //     exit(404);
-    // }
-    (void)pars;
-    it = getServer(fd);
     if (isIP(hst)) {
         ip = hst.substr(0, hst.find(':'));
         port = hst.substr(hst.find(':') + 1);
         std::cout << "IP: '" << ip << "'" << " PORT: '" << port << "'" << std::endl;
         ip_port = 1;
     }
-    if ((*it)->cont["server_name"] != hst && !ip_port) {
-        perror("Server not found");
-        exit(15);
+    for (it = pars.s.begin(); it != pars.s.end(); it++) {
+            std::cout << "CONFPORT: '" << (*it)->cont.find("listen")->second << "'" << " INCOMING PORT: '" << port << "'\n";
+        if ((*it)->cont.find("listen")->second == port) {
+            if ((*it)->cont["server_name"] == hst)
+                break;
+            if ((*it)->cont.find("host")->second == ip || ip == "localhost") {
+                if (ip_port) {
+                    break ;
+                }
+            }
+            else
+                continue;
+        }
+        else
+            continue;
     }
-    else
-        std::cout << "SERVER FOUND\n";
+    if (it == pars.s.end()) {
+        perror("server NOT found");
+        exit(404);
+    }
     return (0);
 }
 
-void request::parse_header(std::string buffer, server &serv, int fd)
+void request::parse_header(std::string buffer, server &serv)
 {
     std::istringstream stream (buffer);
     std::string line;
@@ -88,7 +68,7 @@ void request::parse_header(std::string buffer, server &serv, int fd)
         else if (line.substr(0, 17) == "Transfer-Encoding")
             transfer_encoding = line.substr(19);
         else if (line.substr(0, 4) == "Host")
-            parseHost(line.substr(6), serv, fd);
+            parseHost(line.substr(6), serv);
         if (line == "\r")
             return ;
     }

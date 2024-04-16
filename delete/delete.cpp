@@ -13,23 +13,18 @@ std::string     delete_::delet_method(std::string path, server &server, int fd)
 
     int stat_ = it->second.get.check_exist(path);
 
-    if (stat_ == 3)
-    {
-        if (it->second.resp.response_error("403", fd))
-            return ("delete_ok");
-    }
     if (!stat_)
     {
         if (it->second.resp.response_error("404", fd))
             return ("delete_ok");
     }
     stat_ = stat(path.c_str(), &path_stat);
-    if(stat_) // SAWL 3LIHA
+    if (access(path.c_str(), W_OK) < 0)
     {
-        if (it->second.resp.response_error("404", fd))
+        if (it->second.resp.response_error("403", fd))
             return ("delete_ok");
     }
-    if (!S_ISDIR(path_stat.st_mode))
+    if (!S_ISDIR(path_stat.st_mode)) // in case was a file .
     {
         if (!remove(path.c_str()))
             return ("delete");
@@ -38,11 +33,16 @@ std::string     delete_::delet_method(std::string path, server &server, int fd)
     }
     else
     {
+        if (path[path.length() - 1] != '/')
+        {
+            if (it->second.resp.response_error("409", fd))
+                return ("delete_ok");
+        }
         DIR *direct = opendir(path.c_str());
         if (!direct)
         {
-            perror("Folder does'nt exist");
-            exit (1);
+            if (it->second.resp.response_error("404", fd))
+                return ("delete_ok");
         }
         else
         {
@@ -51,7 +51,6 @@ std::string     delete_::delet_method(std::string path, server &server, int fd)
             {
                 if (std::string(entry->d_name).compare("..") && std::string(entry->d_name).compare("."))
                 {
-                    std::cout << "check  < -- > : " << path << "\n"; 
                     if (path[path.length() - 1] != '/')
                     {
                         line = path + "/" + entry->d_name;

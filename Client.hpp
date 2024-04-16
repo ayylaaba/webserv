@@ -40,7 +40,7 @@ class Client
         post                                post_;
         server                              serv_;
         delete_                             delet;
-        // cgi                                 cgi;
+        cgi                                 cgi;
         Client(std::string uri_);
         Client(const Client& copy);
         std::map<std::string, std::string>  message_response_stat();
