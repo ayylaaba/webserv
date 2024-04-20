@@ -33,6 +33,7 @@ class request
         std::string                         rest_fldr;
         std::string                         full_path;
         std::string                         full_rest;
+        std::string                         loca__root;
         size_t                              pos;
         bool                                found;
         bool                                method_state;
@@ -56,6 +57,7 @@ class request
 
         /*************** REQUEST FUNCTIONS ***************/
 
+        int                                       check_path_access(std::string path);
         int                                       check_cgi_exten(std::string exten);
         void                                      reset();
         void                                      check_cgi_exten(int fd);

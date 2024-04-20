@@ -32,6 +32,7 @@ int     response::response_error(std::string stat, int fd)
             std::fstream    err_file;
             err_file.open(it_->second.c_str());
             char            buff_[1024];
+            bzero(buff_, 1024);
             err_file.read(buff_, 1024).gcount();
             response = buff_;
             size << response.size();

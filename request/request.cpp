@@ -1,5 +1,6 @@
 #include "../request.hpp"
 #include "../Client.hpp"
+#define MAX_PATH = 1000;
 extern std::map<int, Client> fd_maps;
 
 int               request::one_of_allowed(std::string mehod, std::vector<std::string> allowed_methods)
@@ -33,6 +34,22 @@ int            request::check_cgi_exten(std::string exten)
     return 0;
 }
 
+int            request::check_path_access(std::string path)
+{
+    char current_path_[1000];
+    std::string compare_root_loca = loca__root.substr(0, loca__root.length() - 1);
+    if (realpath(path.c_str(), current_path_) !=   NULL) // leak
+    {
+        std::string current_path(current_path_);
+        std::cout << "current_path = '" << current_path << "'\n";
+        std::cout << "location_root = '" << compare_root_loca << "'\n";
+        std::cout << "value = " << current_path.compare(0, compare_root_loca.length(), compare_root_loca)  << "\n";
+        if (current_path.compare(0, compare_root_loca.length(), compare_root_loca) != 0)
+            return (1);
+    }
+    return (0);
+}
+
 void            request::parse_req(std::string   rq, server &server, int fd) // you can remove the server argenent
 {
     parse_header(rq, server);
@@ -43,28 +60,33 @@ void            request::parse_req(std::string   rq, server &server, int fd) // 
     vec           = server.isolate_str(rq.substr(0, last) , ' ');
     method        = vec[0];
     path          = vec[1];
-    http_version  = vec[2];
+    http_version  = vec[2];    
+    it->second.resp.response_message = server.response_message;
     uri = get_full_uri(server, it->second); //
     x = it->second.get.check_exist(uri);
-    it->second.resp.response_message = server.response_message;
     std::cout << "Full Path = " << uri << std::endl;
     std::cout << " N checkiw Wach L2mor Tayba wla la " << std::endl;
-
-    if (http_version.compare("HTTP/1.1"))
-    {
-        state = it->second.resp.response_error("505", fd);    
-        it->second.version_not_suported = 1;
-        return ;
-    }
     if (vec.size() != 3 || last == std::string::npos)
     {
-        state = it->second.resp.response_error("505", fd);    
-        it->second.version_not_suported = 1;
-        return ;
+        state = it->second.resp.response_error("400", fd);    
+        it->second.not_allow_method = 1;
+        return ;        
+    }
+    if (check_path_access(uri))
+    {
+        state = it->second.resp.response_error("403", fd);    
+        it->second.not_allow_method = 1;
+        return ;        
     }
     if ((method.compare("DELETE") && method.compare("POST") && method.compare("GET")) || !method_state)
     {
         state = it->second.resp.response_error("405", fd);
+        it->second.not_allow_method = 1;
+        return ;
+    }
+    if (http_version.compare("HTTP/1.1"))
+    {
+        state = it->second.resp.response_error("505", fd);    
         it->second.not_allow_method = 1;
         return ;
     }
@@ -123,12 +145,24 @@ int           request::rewrite_location(std::map<std::string, std::string> locat
     std::map<std::string, std::string>::iterator      ite = location_map.end();
     for (std::map<std::string, std::string>::iterator itb = location_map.begin(); itb != ite; itb++)
     {
+        if ((!(*itb).first.compare("upload")))
+            upload_state = (*itb).second;
+        if ((!(*itb).first.compare("root")))
+            loca__root = (*itb).second;
+        if ((!itb->first.compare("cgi_status")))  
+            stat_cgi = itb->second;
+    }
+
+    for (std::map<std::string, std::string>::iterator itb = location_map.begin(); itb != location_map.end(); itb++)
+    {
         if ((!(*itb).first.compare("location") && !(*itb).second.compare("/"))) // found bool is false in case location not found !
             root_map = location_map;
         if ((!(*itb).first.compare("location") &&  !itb->second.compare(longest_loca)))
         {
             if ((!(*itb).first.compare("upload")))
                 upload_state = (*itb).second;
+            if ((!(*itb).first.compare("root")))
+                loca__root = (*itb).second;
             if ((!itb->first.compare("cgi_status")))  
                 stat_cgi = itb->second;
             found = true;
@@ -182,15 +216,17 @@ void        request::fill_extentions()
     // i think you need more than that 
     extentions["html"] = "text/html"; 
     extentions["txt"]  = "text/plain"; 
-    extentions["jpg"] = "image/jpg"; 
+    extentions["jpg"]  = "image/jpg"; 
     extentions["jpeg"] = "image/jpeg";
-    extentions["png"] = "image/png";
-    extentions["mp3"] = "audio/mpeg";
-    extentions["mp4"] = "video/mp4";
+    extentions["png"]  = "image/png";
+    extentions["mp3"]  = "audio/mpeg";
+    extentions["mp4"]  = "video/mp4";
     extentions["webm"] = "video/webm";
-    extentions["pdf"] = "application/pdf";
-    extentions["zip"] = "application/zip";
+    extentions["pdf"]  = "application/pdf";
+    extentions["zip"]  = "application/zip";
     extentions["woff"] = "application/font-woff";
+    extentions["woff"] = "text/markdown";
+    extentions["md"]   = "text/markdown";
 }
 
 void request::reset() 

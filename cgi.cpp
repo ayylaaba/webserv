@@ -43,7 +43,6 @@ void        cgi::cgi_work(int fd)
     if (execve(pythonInterpreter, args, env) == -1) 
         it->second.serv_.print_err("execve error");
     // std::ofstream   cgi_file("file.txt");
-
     exit (12);
 }
 

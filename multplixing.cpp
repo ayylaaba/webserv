@@ -159,14 +159,14 @@ void        multplixing::lanch_server(server parse)
                             fd_maps[events[i].data.fd].requst     = rq;
                             fd_maps[events[i].data.fd].resp       = resp_;
                             // fd_maps[events[i].data.fd].cgi        = cgi_;
-                            // std::cout << " stat = " << it_fd->second.not_allow_method << "\n"; Segv
-                            // if (it_fd->second.not_allow_method || it_fd->second.version_not_suported)
-                            // {
-                            //     it_fd->second.not_allow_method      = 0;
-                            //     it_fd->second.version_not_suported  = 0;
-                            //     if (close_fd( events[i].data.fd ))
-                            //         continue ;
-                            // }
+                            std::cout << " stat = " << it_fd->second.not_allow_method << "\n"; 
+                            if (it_fd->second.not_allow_method)
+                            {
+                                it_fd->second.not_allow_method      = 0;
+                                it_fd->second.version_not_suported  = 0;
+                                if (close_fd( events[i].data.fd ))
+                                    continue ;
+                            }
                             // flag = 1;
                         }
                     }
@@ -194,18 +194,24 @@ void        multplixing::lanch_server(server parse)
                     respo = 0;
                     if (!fd_maps[events[i].data.fd].requst.method.compare("GET"))
                         respo = (*it_fd).second.get.get_mthod(events[i].data.fd);
-                    else if (!fd_maps[events[i].data.fd].requst.method.compare("DELETE"))
+                    if (!fd_maps[events[i].data.fd].requst.method.compare("DELETE"))
                     {
                         std:: string res_delete = (*it_fd).second.delet.delet_method((*it_fd).second.requst.uri, (*it_fd).second.serv_, events[i].data.fd);
-                        if (!res_delete.compare("delete_ok"))
-                            respo = 1;
+                        if (!res_delete.compare("delete_stat"))
+                        {
+                             if (close_fd( events[i].data.fd ))
+                                continue ;
+                        }
                         else if (!res_delete.compare("delete"))
                         {
                             if (it_fd->second.resp.response_error("204", events[i].data.fd))
-                                respo = 1;
+                            {
+                                if (close_fd( events[i].data.fd ))
+                                    continue ;
+                            }
                         }
                     }
-                    else if (!fd_maps[events[i].data.fd].requst.method.compare("POST") && fd_maps[events[i].data.fd].post_.j)
+                    if (!fd_maps[events[i].data.fd].requst.method.compare("POST") && fd_maps[events[i].data.fd].post_.j)
                     {
                         std::string response = "HTTP/1.1 201 OK\r\nContent-Type: text/html\r\n\r\nhello";
                         send(events[i].data.fd,response.c_str(), response.length(), 0);

@@ -128,6 +128,7 @@ int    get_method::get_mthod(int fd)
     return 0;
 }
 
+
 // std::map<std::string, std::string>        get_method::message_response_stat(/*std::map<std::string, std::string> &response_message*/)
 // {
 //     response_message["200"] = "OK";
@@ -150,6 +151,7 @@ int    get_method::get_mthod(int fd)
 //     response_message["504"] = "Gateway Timeout";
 //     return (response_message);
 // }
+
 
 int     get_method::response_error(std::string stat, int fd)
 {

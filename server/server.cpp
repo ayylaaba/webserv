@@ -109,7 +109,7 @@ void        server::mange_file(const char* file)
     {
         str = strtrim(str);
         if (str.empty())
-            return ;
+            continue;
         if (str.compare("server"))
             print_err("syntaxt_error server");
         std::getline(rd_content, str); // store all servers
@@ -118,7 +118,7 @@ void        server::mange_file(const char* file)
         {
             s_token++;
             parse_both(rd_content,str);
-            if ((!str.compare("}") && s_token == 1 ))
+            if ((!str.compare("}") && s_token == 1))
             {
                 check_duplicate_location(vec_of_locations);
                 s.push_back(new server(cont, l, vec_of_locations));
@@ -141,7 +141,7 @@ void           server::message_response_stat()
         response_message["301"] = "Moved Permanently";
         // response_message["302"] = "Found";
         // response_message["304"] = "Not Modified";
-        // response_message["400"] = "Bad Request";
+        response_message["400"] = "Bad Request";
         // response_message["401"] = "Unauthorized";
         response_message["403"] = "Forbidden";
         response_message["404"] = "Not Found";
@@ -160,8 +160,6 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
     std::vector<std::string>    v_s;
     while (std::getline(rd_cont, str)) // loop to iterate inside location
     {
-       
-        check = "off";
         str_ = strtrim(str_);
         if (str_.empty() || isWhitespace(str_) || str[0] == '#')
             continue ;
@@ -170,7 +168,7 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
             || !l_vec[0].compare("limit_except") || !l_vec[0].compare("allow_methods") 
             || !l_vec[0].compare("autoindex") || !l_vec[0].compare("upload") 
             || !l_vec[0].compare("upload_path") || !l_vec[0].compare("cgi_path") 
-            || !l_vec[0].compare("cgi_status"))
+            || !l_vec[0].compare("cgi_status") || !l_vec[0].compare("return"))
             {
                 check_size(l_vec, 'l'); 
                 if (!l_vec[0].compare("allow_methods"))
@@ -179,6 +177,12 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
                     _root = l_vec[1];
                 if (!l_vec[0].compare("cgi_path"))
                     cgi_map[l_vec[1]] = l_vec[2];
+                if (!l_vec[0].compare("cgi_path"))
+                {
+                    if (!l_vec[1].compare("301"))
+                        print_err("syntaxt_error redirection stat");
+                    redirction_map[l_vec[1]] = l_vec[2];
+                }
                 stor_values(l_vec, 'l');
             }
         else if (!l_vec[0].compare("}"))
@@ -189,11 +193,13 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
                 // make map that store path location and root , you have root_
                 handl_loca(cont_l, v_s, _root);
                 cgi_extention();
-                l.push_back(new location(cont_l, v_s, cgi_map));
+                l.push_back(new location(cont_l, v_s, cgi_map, redirction_map));
                 check_dup();
                 cont_l.clear();
+                redirction_map.clear();
                 v_s.clear();
                 // cgi_map.clear();
+                redirction_map.clear();
                 break ;
             }
         }
@@ -209,7 +215,8 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
         if (!str_l_vec[0].compare("location"))
         {
             check_size(str_l_vec, 'l');
-            vec_of_locations.push_back(str_l_vec[1]);
+            std::cout << "location after normale = " << controle_slash(str_l_vec[1]) << "\n";
+            vec_of_locations.push_back(controle_slash(str_l_vec[1]));
             cont_l[str_l_vec[0]]    = str_l_vec[1].substr(0, str_l_vec[1].size()); // store location with its path
             return 1 ;
         }
@@ -277,8 +284,7 @@ int    server::parse_both(std::ifstream& rd_cont, std::string &str_)
             break;
         else if (s_vec[0].compare("listen")&& s_vec[0].compare("error_page") 
         && s_vec[0].compare("client_max_body_size") && s_vec[0].compare("host") 
-        && s_vec[0].compare("server_name") && s_vec[0].compare("index")
-        &&s_vec[0].compare("root"))
+        && s_vec[0].compare("server_name"))
         {
             if (s_vec[0].compare("location") && s_vec[0].compare("{"))
                 print_err("syntaxt_error");    
@@ -287,7 +293,8 @@ int    server::parse_both(std::ifstream& rd_cont, std::string &str_)
                 if (s_vec[0].compare("{")) // you mean that is not { then it is a location
                 {
                     check_size(s_vec, 'l'); // check first loca's path
-                    vec_of_locations.push_back(s_vec[1]);
+                    vec_of_locations.push_back(controle_slash(s_vec[1]));
+                    std::cout << "first location after normal = " << controle_slash(s_vec[1]) << "\n";
                     cont_l[s_vec[0]] = s_vec[1];
                     std::getline(rd_cont, str_);
                     str = strtrim(str);
@@ -335,7 +342,7 @@ void        server::check_size(std::vector<std::string> &s, char c)
             s_root = s_vec[1];    
         if (!s[0].compare("listen") || !s[0].compare("root")
         || !s[0].compare("client_max_body_size") || !s[0].compare("host") 
-        || !s[0].compare("server_name"))
+        || !s[0].compare("server_name") || !s[0].compare("index"))
         {
             if (s.size() != 2)
                 print_err("syntaxt_error " + s[0]);
@@ -362,7 +369,7 @@ void        server::check_size(std::vector<std::string> &s, char c)
             if (s.size() < 2 || s.size() > 2)
                 print_err("syntaxt_error on location");
         }
-        if (!s[0].compare("cgi_path"))
+        if (!s[0].compare("cgi_path") || !s[0].compare("return") )
         {
             if (s.size() != 3)
                 print_err("syntaxt_error on cgi_path");
@@ -447,8 +454,6 @@ void        server::stor_values(std::vector<std::string> s, char ch)
             handl_serv(s);
         if (!s[0].compare("listen"))
             cont[s[0]] = s[1].substr(0, s[1].size());
-        else if (!s[0].compare("root"))
-            cont[s[0]] = s[1].substr(0, s[1].size());
         else if (!s[0].compare("error_page"))
             cont[s[0]] = s[1].substr(0, s[1].size());
         else if (!s[0].compare("host"))
@@ -466,7 +471,7 @@ void        server::stor_values(std::vector<std::string> s, char ch)
         if (!s[0].compare("index"))            
             cont_l[s[0]] = s[1].substr(0, s[1].size());
         else if (!s[0].compare("root"))
-            cont_l[s[0]] = s[1].substr(0, s[1].size());
+            cont_l[s[0]] = controle_slash(s[1].substr(0, s[1].size()));
         else if (!s[0].compare("limit_except"))
             cont_l[s[0]] = s[1].substr(0, s[1].size());
         else if (!s[0].compare("allow_methods"))
@@ -475,7 +480,38 @@ void        server::stor_values(std::vector<std::string> s, char ch)
             cont_l[s[0]] = s[1].substr(0, s[1].size());
         else if (!s[0].compare("upload"))
             cont_l[s[0]] = s[1].substr(0, s[1].size());
+        else if (!s[0].compare("upload_path"))
+            cont_l[s[0]] = controle_slash(s[1].substr(0, s[1].size()));
         else if (!s[0].compare("cgi_status"))
             cont_l[s[0]] = s[1].substr(0, s[1].size());
     }
+}
+
+
+std::string    server::controle_slash(std::string direc) // remove slash beg, end .
+{
+    size_t  f_slash = 0;
+    std::string normle_path;
+    for (size_t i = 0; i < direc.size(); i++)
+    {
+        if (direc[i] == '/' && direc[i + 1] == '/')
+            f_slash++;
+        if (direc[i] == '/' && direc[i + 1] != '/')
+            break;
+    }
+    normle_path = direc.substr(f_slash);
+    size_t  lenth = normle_path.length();
+    for (size_t len = direc.length(); len > 0; len--)
+    {
+        if (direc[len] == '/' && direc[len - 1] == '/')
+            lenth--;
+        if (direc[len] == '/' && direc[len - 1] != '/')
+            break;
+    }
+    normle_path = normle_path.substr(0, lenth);
+    if (normle_path[0] != '/' || normle_path.empty())
+        normle_path = '/' + normle_path;
+    if (normle_path[normle_path.length() - 1] != '/' || normle_path.empty())
+        normle_path += '/';
+    return (normle_path);
 }

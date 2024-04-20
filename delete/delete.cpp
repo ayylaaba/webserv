@@ -11,18 +11,18 @@ std::string     delete_::delet_method(std::string path, server &server, int fd)
     struct stat path_stat;
     std::map<int, Client>::iterator it = fd_maps.find(fd);
 
-    int stat_ = it->second.get.check_exist(path);
-
-    if (!stat_)
-    {
-        if (it->second.resp.response_error("404", fd))
-            return ("delete_ok");
-    }
-    stat_ = stat(path.c_str(), &path_stat);
+    stat(path.c_str(), &path_stat);
+    
     if (access(path.c_str(), W_OK) < 0)
     {
         if (it->second.resp.response_error("403", fd))
-            return ("delete_ok");
+            return ("delete_stat");
+    }
+    if (access(path.c_str(), F_OK) < 0)
+    {
+        std::cout << "file_exist === " << path << "\n";
+        if (it->second.resp.response_error("404", fd))
+            return ("delete_stat");
     }
     if (!S_ISDIR(path_stat.st_mode)) // in case was a file .
     {
@@ -33,16 +33,11 @@ std::string     delete_::delet_method(std::string path, server &server, int fd)
     }
     else
     {
-        if (path[path.length() - 1] != '/')
-        {
-            if (it->second.resp.response_error("409", fd))
-                return ("delete_ok");
-        }
         DIR *direct = opendir(path.c_str());
         if (!direct)
         {
             if (it->second.resp.response_error("404", fd))
-                return ("delete_ok");
+                return ("delete_stat");
         }
         else
         {
@@ -51,14 +46,14 @@ std::string     delete_::delet_method(std::string path, server &server, int fd)
             {
                 if (std::string(entry->d_name).compare("..") && std::string(entry->d_name).compare("."))
                 {
-                    if (path[path.length() - 1] != '/')
+                    if (path[path.length() - 1] != '/' && it->second.get.check_exist(path + "/" + entry->d_name) == 2)
                     {
-                        line = path + "/" + entry->d_name;
+                        line = path + "/" + entry->d_name + "/";
                         delet_method(line, server, fd);
                     }
-                    else
+                    else /*if (path[path.length() - 1] != '/' && it->second.get.check_exist(path + "/" + entry->d_name) == 1)*/
                     {
-                        line = path + entry->d_name;
+                        line = path + "/" + entry->d_name;
                         delet_method(line, server, fd);
                     }
                 }

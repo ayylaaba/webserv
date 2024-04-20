@@ -12,11 +12,12 @@
 
 #include "../location.hpp"
 
-location::location(std::map<std::string, std::string> &c, std::vector <std::string> &v_s, std::map <std::string, std::string> &cgi_m)
+location::location(std::map<std::string, std::string> &c, std::vector <std::string> &v_s, std::map <std::string, std::string> &cgi_m, std::map <std::string, std::string> &redirc)
 {
     cont_l = c;
     allowed_methods = v_s;
-    cgi_map = cgi_m;    
+    cgi_map = cgi_m;
+    redirction_map = redirc;
 }
 
 int     location::check_exist(std::string path)
@@ -107,11 +108,11 @@ void        location::handl_loca(std::map<std::string, std::string>& m, std::vec
                     print_err("syntaxt_error methods");
             }
         }
-        if (!(*it).first.compare("index")) // most be more than index and most check each one i think.
+        if (!(*it).first.compare("index"))
         {
             std::string path = root + "/" + (*it).second;
             if (!check_exist(path))
-                print_err("error on the file");
+                print_err("syntaxt_error index file");
         }
         it++;
     }

@@ -50,6 +50,7 @@ class server : public location
         std::vector<std::string>            vec_of_locations;
         std::vector<std::string>            p_s_id;
 
+        std::string                         controle_slash(std::string direc);
         void                                check_duplicate_location(std::vector<std::string> s);
         void                                check_server_deplicate();
         void                                message_response_stat();
