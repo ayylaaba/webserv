@@ -47,7 +47,7 @@ int     response::response_error(std::string stat, int fd)
         {          
             std::map<std::string, std::string>::iterator it_message_error = response_message.find(stat);
             if (it_message_error == response_message.end())
-                exit (122);
+                return (0);
             std::cout << "here's map size = " <<  response_message.size() << "\n";
             std::string _respond_stat;
             _respond_stat = "<h1>" + it_message_error->second + "</h1>";
@@ -107,6 +107,7 @@ std::string      response::get_header(std::string wich, std::string exten, std::
         else if (wich == "301")
         {
             std::string     path_with_slash = fd_inf.requst.path + "/";
+            std::cout << " 3011 path <<=== " << path_with_slash << "\n";
             response = "HTTP/1.1 301 Moved Permanently\r\n";
             response += "Location: " + path_with_slash + "\r\n\r\n";
             fd_inf.res_header = 1;

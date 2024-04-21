@@ -66,6 +66,14 @@ void            request::parse_req(std::string   rq, server &server, int fd) // 
     x = it->second.get.check_exist(uri);
     std::cout << "Full Path = " << uri << std::endl;
     std::cout << " N checkiw Wach L2mor Tayba wla la " << std::endl;
+    // if (!redirect_path.empty())
+    // {
+    //     path = redirect_path;
+    //     std::cout << " path =->>>> " << path << "\n";
+    //     state = it->second.resp.response_error("301", fd);   
+    //     it->second.not_allow_method = 1;
+    //     return ;    
+    // }
     if (vec.size() != 3 || last == std::string::npos)
     {
         state = it->second.resp.response_error("400", fd);    
@@ -133,7 +141,16 @@ std::string     request:: get_full_uri(server &server, Client& obj)
             method_state = true;
         loca_found = rewrite_location((*it)->l[j]->cont_l);
         if (loca_found)
+        {
+            if (!(*it)->l[j]->redirction_map.empty())
+            {
+                std::map<std::string, std::string>::iterator itb  = (*it)->l[j]->redirction_map.begin();
+                redirect_path = itb->second;
+                path = itb->second;
+                std::cout << "redirect_path = " << redirect_path << "\n";
+            }
             break ;
+        }
         cgi_map = (*it)->l[j]->cgi_map;
     }
     return full_path;

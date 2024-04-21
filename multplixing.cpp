@@ -159,18 +159,34 @@ void        multplixing::lanch_server(server parse)
                             fd_maps[events[i].data.fd].requst     = rq;
                             fd_maps[events[i].data.fd].resp       = resp_;
                             // fd_maps[events[i].data.fd].cgi        = cgi_;
-                            std::cout << " stat = " << it_fd->second.not_allow_method << "\n"; 
+                            std::cout << " stat = " << it_fd->second.not_allow_method << "\n";
                             if (it_fd->second.not_allow_method)
                             {
                                 it_fd->second.not_allow_method      = 0;
                                 it_fd->second.version_not_suported  = 0;
-                                if (close_fd( events[i].data.fd ))
+                                if (close_fd(events[i].data.fd))
                                     continue ;
                             }
                             // flag = 1;
                         }
                     }
-                    // exit (22);
+                    if (!it_fd->second.requst.redirect_path.empty())
+                    {
+                        std::cout << "redirect ==> " << it_fd->second.requst.redirect_path << "\n";
+                        std::cout << "redirect_path ==> " << it_fd->second.requst.path << "\n";
+                        if (it_fd->second.resp.response_error("301", events[i].data.fd))
+                        {
+                            std::cout << "redirect ==> " << it_fd->second.requst.redirect_path << "\n";
+                            std::cout << "redirect_path ==> " << it_fd->second.requst.path << "\n";
+                             it_fd->second.requst.redirect_path.clear();
+                             it_fd->second.requst.path.clear();
+                             std::cout << "<--- fd ---> " << events[i].data.fd  << "\n";
+                            if (close_fd(events[i].data.fd))
+                            {
+                                continue ;
+                            }
+                        }
+                    }
                     if (rq.method == "POST" && flag == 1 && !it_fd->second.not_allow_method)
                     {
                         fd_maps[events[i].data.fd].post_.j = 0;

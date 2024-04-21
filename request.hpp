@@ -49,6 +49,7 @@ class request
         size_t                              last;
         std::vector<std::string>            vec;
         std::string                         extention_type;
+        std::string                         redirect_path;
         std::map<std::string, std::string>  extentions;
         std::map<std::string, std::string>  cgi_map;
         std::map<std::string, std::string>  root_map;

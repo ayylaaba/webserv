@@ -177,9 +177,10 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
                     _root = l_vec[1];
                 if (!l_vec[0].compare("cgi_path"))
                     cgi_map[l_vec[1]] = l_vec[2];
-                if (!l_vec[0].compare("cgi_path"))
+                if (!l_vec[0].compare("return"))
                 {
-                    if (!l_vec[1].compare("301"))
+                    std::cout << "301 = '" << l_vec[1] << "'\n";
+                    if (l_vec[1].compare("301"))
                         print_err("syntaxt_error redirection stat");
                     redirction_map[l_vec[1]] = l_vec[2];
                 }
