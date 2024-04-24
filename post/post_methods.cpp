@@ -77,7 +77,7 @@ bool post::post_method(std::string buffer, request req)
 {
     if (buffer.find("\r\n\r\n") != std::string::npos && f == 0)
     {
-        std::cout << "======> " << req.content_type << std::endl;
+        // std::cout << "======> " << req.content_type << std::endl;
         // exit(1);
         open_unic_file(req.content_type);
         buffer = buffer.substr(buffer.find("\r\n\r\n") + 4);

@@ -23,6 +23,7 @@ class Client;
 class response
 {
     public:
+        int redirection_stat;
         std::map<std::string, std::string> response_message;
         int         response_error(std::string stat, int fd);
         std::string get_header(std::string wich, std::string exten, std::string lentg, Client& fd_inf);

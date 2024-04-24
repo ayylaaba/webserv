@@ -51,7 +51,7 @@ void multiplexing()
                     std::cerr << "Failed to accept connection ." << std::endl;
                     break;
                 }
-                event.events = EPOLLIN | EPOLLOUT;
+                event.events = EPOLLIN | EPOLLOUT | ;
                 event.data.fd = clientSocketFD;
                 epoll_ctl(epollFD, EPOLL_CTL_ADD, clientSocketFD, &event);
             } 
@@ -77,7 +77,7 @@ void multiplexing()
                     /*event to write for client  */
                     std::string response = "HTTP/1.1 201 OK\r\nContent-Type: text/html\r\n\r\nhello";
                     if (send(events[i].data.fd,response.c_str(), response.length(), 0) == - 1)
-                        std::cout << "=====here=====\n";
+                        // std::cout << "=====here=====\n";
                     epoll_ctl(epollFD, EPOLL_CTL_DEL, clientSocketFD, NULL);
                     close(events[i].data.fd);
                     j = 0;

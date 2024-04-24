@@ -1,6 +1,14 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
 
+#define RESET   "\033[0m"
+#define RED     "\033[31m"
+#define GREEN   "\033[32m"
+#define YELLOW  "\033[33m"
+#define BLUE    "\033[34m"
+#define MAGENTA "\033[35m"
+#define CYAN    "\033[36m"
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -34,6 +42,7 @@ class request
         std::string                         full_path;
         std::string                         full_rest;
         std::string                         loca__root;
+        std::string                         redirction_path;
         size_t                              pos;
         bool                                found;
         bool                                method_state;
@@ -41,10 +50,13 @@ class request
         unsigned long                       g;
         size_t                              check;
         int                                 x;
+        int                                 redirection_stat;
         int                                 redirct_loca;
+        int                                 check_redi;
         int                                 x_cgi;
         std::string                         longest_loca;
         std::string                         stat_cgi;
+        std::string                         upload_path;
         std::string                         line;
         size_t                              last;
         std::vector<std::string>            vec;

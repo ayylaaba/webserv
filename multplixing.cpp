@@ -26,13 +26,12 @@ in_addr_t multplixing::convertIpv4toBinary(const std::string& ip) {
 
 int        multplixing::close_fd(int fd)
 {
-    std::cout << "Client " << fd << " Was Removed From Map\n";
-    std::cout << "it is Done\n";
+    // std::cout << "Client " << fd << " Was Removed From Map\n";
+    // std::cout << "it is Done\n";
 
     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd , NULL);
     close(fd);
     fd_maps.erase(fd_maps.find(fd));
-    // exit(120);
     return 1;
 }
 
@@ -66,7 +65,7 @@ void        multplixing::lanch_server(server parse)
         sock_info.sin_port = htons(string_to_int((*it)->cont["listen"]));
         uint32_t ip = convertIpv4toBinary((*it)->cont["host"]);
         sock_info.sin_addr.s_addr = ip;
-        std::cout << "Ip Address : " << inet_ntoa(sock_info.sin_addr) << std::endl;
+        // std::cout << "Ip Address : " << inet_ntoa(sock_info.sin_addr) << std::endl;
         int sp = 1;
         setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, &sp, sizeof(sp));
         if (bind(sockfd, (struct sockaddr *)&sock_info, sizeof(sock_info))) {
@@ -97,7 +96,7 @@ void        multplixing::lanch_server(server parse)
     
         epoll_ctl(epoll_fd, EPOLL_CTL_ADD, sockfd, &envts);
 
-        std::cout << "Server is listening on port '" << (*it)->cont["listen"] << "'...\n";
+        // std::cout << "Server is listening on port '" << (*it)->cont["listen"] << "'...\n";
     }
 
     while (true) 
@@ -107,12 +106,11 @@ void        multplixing::lanch_server(server parse)
         std::vector<int>::iterator it;
 
         signal(SIGPIPE, SIG_IGN); // magic this line ignore sigpip when you write to close fd the program exit by sigpip sign
-        std::cout << "whyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\n";
+        // std::cout << "whyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\n";
         int num = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
         for (int i = 0; i < num; i++) {
             if ((it = std::find(serverSocket.begin(), serverSocket.end(), events[i].data.fd)) != serverSocket.end()) {
-                std::cout << "BEFORE CLIENT FD VALUE :" << events[i].data.fd << std::endl;
-                std::cout << "New Client Connected\n";
+                // std::cout << "New Client Connected\n";
                 int client_socket = accept(*it, NULL, NULL);
                 struct epoll_event envts_client;
                 envts_client.data.fd = client_socket;
@@ -123,14 +121,15 @@ void        multplixing::lanch_server(server parse)
                     perror("Issue In Adding Client To Epoll");
                     exit(1);
                 }
+                std::cout<<"*********************************"<<client_socket<<std::endl;
                 fd_maps[client_socket] = Client();
                 fd_maps[client_socket].serv_      = parse;
-                std::cout << "AFTER CLIENT FD VALUE :" << events[i].data.fd << std::endl;
-                std::cout << "Client " << client_socket << " Added To Map\n";
+                // std::cout << "AFTER CLIENT FD VALUE :" << events[i].data.fd << std::endl;
+                // std::cout << "Client " << client_socket << " Added To Map\n";
             }
             else {
                 std::map<int, Client>::iterator it_fd = fd_maps.find(events[i].data.fd);
-                std::cout << "Client with an event :" << events[i].data.fd << std::endl;
+                // std::cout << "Client with an event :" << events[i].data.fd << std::endl;
                 if (events[i].events & EPOLLRDHUP || events[i].events & EPOLLERR  || events[i].events & EPOLLHUP) 
                 {
                     if (close_fd( events[i].data.fd ))
@@ -138,10 +137,10 @@ void        multplixing::lanch_server(server parse)
                 }
                 else if (events[i].events & EPOLLIN)
                 {
-                    std::cout << "FD READY TO READ -_- = " << events[i].data.fd << " \n";
+                    // std::cout << "FD READY TO READ -_- = " << events[i].data.fd << " \n";
                     buffer.resize(BUFFER_SIZE);
                     bytesRead = recv(events[i].data.fd , &buffer[0], BUFFER_SIZE, 0);
-                    std::cout << "\n\n\t -> bytesRead ==== " << bytesRead << std::endl;
+                    // std::cout << "\n\n\t -> bytesRead ==== " << bytesRead << std::endl;
                     if (bytesRead > 0)
                         buffer.resize(bytesRead);
                     if (bytesRead <= 0)
@@ -149,8 +148,7 @@ void        multplixing::lanch_server(server parse)
                        if (close_fd( events[i].data.fd ))
                             continue ;
                     }
-                    std::cout << buffer << "\n";
-
+                    // std::cout << buffer << "\n";
                     if (flag == 0)
                     {
                         if (buffer.find("\r\n\r\n") != std::string::npos)
@@ -159,42 +157,41 @@ void        multplixing::lanch_server(server parse)
                             fd_maps[events[i].data.fd].requst     = rq;
                             fd_maps[events[i].data.fd].resp       = resp_;
                             // fd_maps[events[i].data.fd].cgi        = cgi_;
-                            std::cout << " stat = " << it_fd->second.not_allow_method << "\n";
+                            // std::cout << " not_allow_method stat = " << it_fd->second.not_allow_method << "\n";
                             if (it_fd->second.not_allow_method)
                             {
                                 it_fd->second.not_allow_method      = 0;
                                 it_fd->second.version_not_suported  = 0;
-                                if (close_fd(events[i].data.fd))
+                                if (close_fd(events[i].data.fd)) // here all deconstructrs calls !!
                                     continue ;
                             }
                             // flag = 1;
                         }
                     }
-                    if (!it_fd->second.requst.redirect_path.empty())
-                    {
-                        std::cout << "redirect ==> " << it_fd->second.requst.redirect_path << "\n";
-                        std::cout << "redirect_path ==> " << it_fd->second.requst.path << "\n";
-                        if (it_fd->second.resp.response_error("301", events[i].data.fd))
-                        {
-                            std::cout << "redirect ==> " << it_fd->second.requst.redirect_path << "\n";
-                            std::cout << "redirect_path ==> " << it_fd->second.requst.path << "\n";
-                             it_fd->second.requst.redirect_path.clear();
-                             it_fd->second.requst.path.clear();
-                             std::cout << "<--- fd ---> " << events[i].data.fd  << "\n";
-                            if (close_fd(events[i].data.fd))
-                            {
-                                continue ;
-                            }
-                        }
-                    }
-                    if (rq.method == "POST" && flag == 1 && !it_fd->second.not_allow_method)
+                    // std::cout << "redirection_stat ===========> " << it_fd->second.requst.redirection_stat << "\n";
+                    // if (!it_fd->second.requst.redirction_path.empty())
+                    // {
+                        // std::cout << RED << "Before " << RESET << "\n";
+                        // std::cout << "redirect_path ==> " << it_fd->second.requst.path << "\n";
+                    //     if (it_fd->second.resp.response_error("301", events[i].data.fd))
+                    //     {
+                            // std::cout << GREEN << "After " << RESET << "\n";
+                            // std::cout << "redirect_path ==> " << it_fd->second.requst.path << "\n";
+                    //         it_fd->second.requst.redirection_stat = 1; 
+                    //         it_fd->second.requst.redirction_path.clear();
+                    //         close_fd(events[i].data.fd);
+                            // std::cout << YELLOW << "After Clean " << RESET << "\n";
+                    //         continue ;
+                    //     }
+                    // }
+                    if (rq.method == "POST" && flag == 1 && !it_fd->second.not_allow_method && it_fd->second.requst.upload_state.compare("on"))
                     {
                         fd_maps[events[i].data.fd].post_.j = 0;
                         if (fd_maps[events[i].data.fd].post_.post_method(buffer, rq)  && !it_fd->second.not_allow_method)
                             fd_maps[events[i].data.fd].post_.j = 1;
                     }
                     fd_maps[events[i].data.fd].u_can_send = 1;
-                            // exit (102);
+                    // exit (102);
                     // std::cout << "request_ uri = " << it_fd ->second.requst.uri << "\n";
                     // if (!it_fd->second.cgi.cgi_stat.compare("cgi_state"))
                     // {
@@ -239,6 +236,7 @@ void        multplixing::lanch_server(server parse)
                     {
                         it_fd->second.not_allow_method = 0;
                         std::cout << "\t\t SF KAML GHADI UTM7A HAD "  << events[i].data.fd << std::endl;
+
                         if (close_fd( events[i].data.fd ))
                             continue ;
                     }

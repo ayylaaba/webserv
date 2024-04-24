@@ -6,7 +6,6 @@ extern std::map<int, Client> fd_maps;
 response::response()
 {
         response_message = message_response_stat(); //
-        std::cout << "resp constructor map size = " <<  response_message.size() << "\n";
 }
 
 response::~response(){
@@ -16,19 +15,18 @@ response::~response(){
 
 int     response::response_error(std::string stat, int fd)
 {
-         std::cout << "\t------------------- response_error ---------------\t"<< std::endl;
+        //  std::cout << "\t------------------- BEGIN response_error ---------------\t"<< std::endl;
         std::string response;
         std::stringstream size;
         std::map<int, Client>::iterator it = fd_maps.find(fd);
         std::map<std::string, std::string>::iterator it_ = it->second.serv_.err_page.find(stat);
         
-        std::cout << "map size = " <<  response_message.size() << "\n";
-        std::cout << "state = " << stat << "\n";
+        // std::cout << RED << "state = " << stat << RESET << "\n";
 
         if( it_ != it->second.serv_.err_page.end())
         {
-            std::cout << "stat " <<  it_->first << " Path " << it_->second << "\n";
-            std::cout << "Stat  File Found=  " << stat << "\n";
+            // std::cout << "stat " <<  it_->first << " Path " << it_->second << "\n";
+            // std::cout << "Stat  File Found=  " << stat << "\n";
             std::fstream    err_file;
             err_file.open(it_->second.c_str());
             char            buff_[1024];
@@ -38,7 +36,7 @@ int     response::response_error(std::string stat, int fd)
             size << response.size();
             response = get_header(stat, "text/html", size.str(), it->second);
             response += it->second.get.to_string(buff_);
-            std::cout << "response -> " << response << " <-\n";
+            // std::cout << "response -> " << response << " <-\n";
             send(fd, response.c_str(), response.size(), 0);
             it->second.rd_done = 1;
             return (1);
@@ -48,17 +46,16 @@ int     response::response_error(std::string stat, int fd)
             std::map<std::string, std::string>::iterator it_message_error = response_message.find(stat);
             if (it_message_error == response_message.end())
                 return (0);
-            std::cout << "here's map size = " <<  response_message.size() << "\n";
             std::string _respond_stat;
             _respond_stat = "<h1>" + it_message_error->second + "</h1>";
             _respond_stat += "<html><head><title> " + it_message_error->second + "</title></head>";
             _respond_stat +=  "<body> <strong>" + it_message_error->second + " </strong></body></html>";
             size << _respond_stat.size();
-            std::cout << "resp ======> " << _respond_stat << "\n";
             response = get_header(stat, "text/html", size.str(), it->second);
             response += _respond_stat;
-            std::cout << "delete responde -> " << response << "\n";
+            std::cout << YELLOW << "--> complete responde <---" << response << RESET << "\n";
             send(fd, response.c_str(), response.size(), 0);
+            std::cout << YELLOW << "-->  send it's Done <---" << RESET << "\n";
             it->second.rd_done = 1;
             return (1);
         }
@@ -91,6 +88,7 @@ std::map<std::string, std::string>        response::message_response_stat(/*std:
 
 std::string      response::get_header(std::string wich, std::string exten, std::string lentg, Client& fd_inf)
 {
+    // std::cout << "--------------> Begin get_header <------------------" << " \n";
     std::string response;
     std::map<std::string , std::string>::iterator it = response_message.find(wich);
     if (it != response_message.end())
@@ -106,13 +104,27 @@ std::string      response::get_header(std::string wich, std::string exten, std::
         }
         else if (wich == "301")
         {
-            std::string     path_with_slash = fd_inf.requst.path + "/";
-            std::cout << " 3011 path <<=== " << path_with_slash << "\n";
-            response = "HTTP/1.1 301 Moved Permanently\r\n";
-            response += "Location: " + path_with_slash + "\r\n\r\n";
-            fd_inf.res_header = 1;
-            return (response);
+            if (fd_inf.requst.redirection_stat)
+            {
+                std::string     path_with_slash = fd_inf.redirec_path;
+                response = "HTTP/1.1 301 Moved Permanently\r\n";
+                // std::cout << MAGENTA << " 301 path <<=== " << path_with_slash << RESET<< "\n";
+                response += "Location: " + path_with_slash + "\r\n\r\n";
+                fd_inf.res_header = 1;
+                return (response);
+            }
+            else
+            {
+                std::string     path_with_slash = fd_inf.requst.path + "/";
+                // std::cout << " 301 fd_inf.requst.path <<=== " << fd_inf.requst.path << "\n";
+                // std::cout << " 301 path <<=== " << path_with_slash << "\n";
+                response = "HTTP/1.1 301 Moved Permanently\r\n";
+                response += "Location: " + path_with_slash + "\r\n\r\n";
+                fd_inf.res_header = 1;
+                return (response);
+            }
         }
     }
+    // std::cout << "--------------> END get_header <------------------" << " \n";
     return "";
 }

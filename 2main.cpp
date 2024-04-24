@@ -59,16 +59,16 @@ int main(int ac, char **av)
     //     size_t j = 0;
         while (j < parse.s[i]->l.size())
         {
-            std::cout << "\n\nlocation ----------------------------\n";
-            std::cout << "=====> " << parse.s[i]->l[i]->allowed_methods[0] << " <====== \n";
-            std::cout << "=====> " << parse.s[i]->l[i]->allowed_methods[1] << " <====== \n";
+            // std::cout << "\n\nlocation ----------------------------\n";
+            // std::cout << "=====> " << parse.s[i]->l[i]->allowed_methods[0] << " <====== \n";
+            // std::cout << "=====> " << parse.s[i]->l[i]->allowed_methods[1] << " <====== \n";
             std::map<std::string, std::string>::iterator  it_b = parse.l[j]->cont_l.begin();
             std::map<std::string, std::string>::iterator it_e = parse.l[j]->cont_l.end();
             
             while (it_b != it_e) 
             {
-                if ((*it_b).first == "location")
-                    std::cout << "hooooooo" << (*it_b).first << " " << (*it_b).second << "\n";
+                // if ((*it_b).first == "location")
+                    // std::cout << "hooooooo" << (*it_b).first << " " << (*it_b).second << "\n";
                 // if ((*it_b).first == "root")
                 //     std::cout << (*it_b).first << " " << (*it_b).second << "\n";
                 // if ((*it_b).first == "index")    

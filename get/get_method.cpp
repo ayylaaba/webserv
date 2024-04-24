@@ -4,12 +4,12 @@
 extern std::map<int, Client> fd_maps;
 
 get_method::get_method(){
-    std::cout << "Get Constructor \n";
+    // std::cout << "Get Constructor \n";
 }
 
 int    get_method::get_mthod(int fd)
 {
-    std::cout << "--------------- get_mthod --------------------------\n";
+    // std::cout << "--------------- get_mthod --------------------------\n";
     std::map<int, Client>::iterator it = fd_maps.find(fd);
     std::string         response;
     std::string         extention_type;
@@ -20,13 +20,13 @@ int    get_method::get_mthod(int fd)
     int                 check_path;
     int                 err_stat;
 
-    std::cout <<  "\t path inside get func = " << it->second.requst.uri << " *******************\n";
-    std::cout <<  "\t autoindex stat = " << it->second.requst.auto_index_stat << " *******************\n";
+    // std::cout <<  "\t path inside get func = " << it->second.requst.uri << " *******************\n";
+    // std::cout <<  "\t autoindex stat = " << it->second.requst.auto_index_stat << " *******************\n";
 
 
     check_path = check_exist(it->second.requst.uri);
 
-    std::cout <<  "\t path type = " << check_path<< " *******************\n";
+    // std::cout <<  "\t path type = " << check_path<< " *******************\n";
     if (it == fd_maps.end()) // print error
         exit(1);
     fileSize = get_fileLenth(it->second.requst.uri); // get full lenth of the file
@@ -34,18 +34,18 @@ int    get_method::get_mthod(int fd)
     StringSize << fileSize;
     // it->second.message_response_stat();
     // err_page_();
-    std::cout << "file lentgh : " << StringSize.str() << "\n";
-    std::cout << "file Extention : " << extention_type << "\n";
-    std::cout << "uri == " << it->second.requst.uri << "\n";
-    std::cout << "check ===> " << check_path << " <===\n";
+    // std::cout << "file lentgh : " << StringSize.str() << "\n";
+    // std::cout << "file Extention : " << extention_type << "\n";
+    // std::cout << "uri == " << it->second.requst.uri << "\n";
+    // std::cout << "check ===> " << check_path << " <===\n";
 
     if (check_path  == 2 && it->second.requst.redirct_loca)
     {
-        std::cout << "check ===> " << check_path << " <===\n";
-        std::cout << "redirct_loca ===> " << it->second.requst.redirct_loca << " <===\n";
+        // std::cout << "check ===> " << check_path << " <===\n";
+        // std::cout << "redirct_loca ===> " << it->second.requst.redirct_loca << " <===\n";
         if (it->second.requst.path[it->second.requst.path.length() -1] != '/')
         {
-            std::cout << it->second.requst.path << "\n";
+            // std::cout << it->second.requst.path << "\n";
             err_stat = it->second.resp.response_error("301", fd);
             if (err_stat)
                 return 1;
@@ -59,10 +59,10 @@ int    get_method::get_mthod(int fd)
         // {
             if (!it->second.res_header)
             {
-                std::cout << " File Case " << "\n";
-                std::cout << "Before ResPonse <<-->> " << response << "\n";
+                // std::cout << " File Case " << "\n";
+                // std::cout << "Before ResPonse <<-->> " << response << "\n";
                 response = it->second.resp.get_header("200", extention_type, StringSize.str(), it->second);
-                std::cout << "After ResPonse <<-->> " << response << "\n";
+                // std::cout << "After ResPonse <<-->> " << response << "\n";
                 it->second.read_f.open(it->second.requst.uri.c_str());
                 send(fd, response.c_str(), response.size(), 0);
             }
@@ -85,23 +85,22 @@ int    get_method::get_mthod(int fd)
         //     it->second.cgi.cgi_work(fd);
         //     it->second.requst.x_cgi = 0;
         //     get_mthod(fd);
-        //     std::cout << "1212222222222222\n";
+            // std::cout << "1212222222222222\n";
         //     exit (12);
         // }
     }
     else if (check_path == 2 && it->second.requst.auto_index_stat)
     {
-        std::cout << " Folder Case " << "\n";
+        // std::cout << " Folder Case " << "\n";
         if (it->second.requst.uri[it->second.requst.uri.length() -1] != '/')
         {
-            std::cout << it->second.requst.uri << "\n";
+            // std::cout << it->second.requst.uri << "\n";
             err_stat = it->second.resp.response_error("301", fd);
             if (err_stat)
                 return 1;
         }
         buff_s = generat_html_list(it->second.requst.uri.substr(0, it->second.requst.uri.find_last_of("/")));
         size << buff_s.size();
-
         if (!it->second.res_header)
         {
             response = it->second.resp.get_header("200", "text/html", size.str(), it->second);
@@ -117,7 +116,7 @@ int    get_method::get_mthod(int fd)
     }
     else // generic function .
     { 
-        std::cout << " Error Case " << "\n";
+        // std::cout << " Error Case " << "\n";
         if (check_path == 3) // permission
             err_stat = it->second.resp.response_error("403", fd);
         else                 // exist
@@ -170,16 +169,16 @@ int     get_method::response_error(std::string stat, int fd)
             size << response.size();
             response = get_header(stat, "text/html", size.str(), it->second);
             response += to_string(buff_);
-            std::cout << "response -> " << response << " <-\n";
+            // std::cout << "response -> " << response << " <-\n";
             send(fd, response.c_str(), response.size(), 0);
             it->second.rd_done = 1;
             return (1);
         }
         else
         {
-            std::cout << "My Here \n";
+            // std::cout << "My Here \n";
             std::string _respond_stat;
-            std::cout << "string error = " << it_message_err->second << "\n";
+            // std::cout << "string error = " << it_message_err->second << "\n";
             _respond_stat = "<h1>" + it_message_err->second + "</h1>";
             _respond_stat += "<html><head><title> " + it_message_err->second + "</title></head>";
             size << _respond_stat.size();
@@ -222,10 +221,10 @@ std::string      get_method::get_header(std::string wich, std::string exten, std
 {
     std::string response;
     std::map<std::string , std::string>::iterator it = response_message.find(wich);
-    std::cout << "stat " << wich << " \n";
+    // std::cout << "stat " << wich << " \n";
     if (it != response_message.end())
     {
-        std::cout << "stat Found 0_0 " << wich << " \n";
+        // std::cout << "stat Found 0_0 " << wich << " \n";
         if (!wich.compare("200") || !wich.compare("404") || !wich.compare("403"))
         {
             response = "HTTP/1.1 ";
@@ -236,7 +235,7 @@ std::string      get_method::get_header(std::string wich, std::string exten, std
         }
         else if (wich == "301")
         {
-            std::cout << "hi hahahahahah \n";
+            // std::cout << "hi hahahahahah \n";
             std::string     path_with_slash = fd_inf.requst.path + "/";
             response = "HTTP/1.1 301 Moved Permanently\r\n";
             response += "Location: " + path_with_slash + "\r\n\r\n";
@@ -282,7 +281,7 @@ std::string            get_method::get_index_file(std::map<std::string, std::str
     {
         if (!(*it_b).first.compare("index"))
         {
-            std::cout << "mkhaskch tdkhl yahad wld ..\n";
+            // std::cout << "mkhaskch tdkhl yahad wld ..\n";
 
             return ((*it_b).second);
         }

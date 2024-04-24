@@ -23,11 +23,11 @@ int request::parseHost(std::string hst, server& pars) {
     if (isIP(hst)) {
         ip = hst.substr(0, hst.find(':'));
         port = hst.substr(hst.find(':') + 1);
-        std::cout << "IP: '" << ip << "'" << " PORT: '" << port << "'" << std::endl;
+        // std::cout << "IP: '" << ip << "'" << " PORT: '" << port << "'" << std::endl;
         ip_port = 1;
     }
     for (it = pars.s.begin(); it != pars.s.end(); it++) {
-            std::cout << "CONFPORT: '" << (*it)->cont.find("listen")->second << "'" << " INCOMING PORT: '" << port << "'\n";
+            // std::cout << "CONFPORT: '" << (*it)->cont.find("listen")->second << "'" << " INCOMING PORT: '" << port << "'\n";
         if ((*it)->cont.find("listen")->second == port) {
             if ((*it)->cont["server_name"] == hst)
                 break;
