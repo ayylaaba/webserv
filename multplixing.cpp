@@ -307,7 +307,6 @@ void        multplixing::lanch_server(server parse)
                     std::cout << "\t\t second.not_allow_method == " << it_fd->second.not_allow_method<< std::endl;
                     if (respo || it_fd->second.not_allow_method)
                     {
-                        // flag = 0;
                         it_fd->second.not_allow_method = 0;
                         std::cout << "\t\t SF KAML GHADI UTM7A HAD "  << events[i].data.fd << std::endl;
                         if (close_fd( events[i].data.fd, epoll_fd ))
