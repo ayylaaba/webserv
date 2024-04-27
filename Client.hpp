@@ -16,6 +16,7 @@
 #include "delete.hpp"
 #include "response.hpp"
 #include "cgi.hpp"
+#include "time.h"
 
 class delete_;
 class response;
@@ -23,6 +24,7 @@ class response;
 class Client
 {
     public:
+        int                                 epoll_fd;
         std::map<std::string, std::string>  response_message;
         int                                 res_header;
         std::string                         stor_uri;
@@ -41,7 +43,8 @@ class Client
         post                                post_;
         server                              serv_;
         delete_                             delet;
-        cgi                                 cgi;
+        cgi                                 cgi_;
+        time_t                              start_time;
         Client(std::string uri_);
         Client(const Client& copy);
         std::map<std::string, std::string>  message_response_stat();

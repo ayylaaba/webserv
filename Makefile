@@ -28,7 +28,7 @@ ${NAME} : ${OBJ}
 	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
 
 clean :
-	rm -f ${OBJ} outfile*
+	rm -f ${OBJ} /nfs/homes/ayylaaba/Desktop/mhassani/website/folder/outfile*
 
 fclean : clean
 	rm -f ${NAME}

@@ -24,7 +24,15 @@
 
 
 # define MAX_EVENTS 1024
-# define BUFFER_SIZE 1000
+# define BUFFER_SIZE 1024
+# define MAX_TIME 20
+
+// struct garbage_s {
+//     void *ptr;
+//     garbage_s* next;
+// }
+
+extern int isfdclosed;
 
 class multplixing
 {
@@ -36,7 +44,7 @@ class multplixing
         std::vector<int>   serverSocket;
         int     string_to_int(std::string str);
         in_addr_t convertIpv4toBinary(const std::string& ip);
-        int     close_fd(int fd);
+        static int     close_fd(int fd, int epl);
         multplixing(){
         };
 };

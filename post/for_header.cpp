@@ -1,4 +1,10 @@
 #include "../request.hpp"
+#include "../Client.hpp"
+#include "../multplixing.hpp"
+
+std::map<int, std::vector<server*>::iterator> server_history;
+std::map<int, int> client_history;
+std::map<int, Client>  fd_maps; 
 
 int isIP(std::string host) {
     int dots = 0;
@@ -16,40 +22,64 @@ int isIP(std::string host) {
     return 0;
 }
 
-int request::parseHost(std::string hst, server& pars) {
+void request::getServer(int fd) {
+    // magic hh
+    int client_fd = client_history[fd];
+    it = server_history[client_fd];
+}
+
+void checkifservername(std::string& ip, int& is_servername) {
+    int count_dots = 0;
+    for (size_t i = 0; i < ip.length(); i++) {
+        if (ip[i] == '.')
+            count_dots++;
+    }
+    if (count_dots != 3)
+        is_servername = 1;
+}
+
+int request::parseHost(std::string hst, int fd) {
     std::string ip;
     std::string port;
-    int         ip_port = 0;
-    if (isIP(hst)) {
-        ip = hst.substr(0, hst.find(':'));
-        port = hst.substr(hst.find(':') + 1);
-        // std::cout << "IP: '" << ip << "'" << " PORT: '" << port << "'" << std::endl;
-        ip_port = 1;
+    std::string incoming_port;
+    std::string incoming_ip;
+    std::map<int, Client>::iterator it3 = fd_maps.find(fd);
+    getServer(fd);
+    incoming_port = (*it)->cont["listen"];
+    incoming_ip = (*it)->cont["host"];
+    int is_servername = 0;
+    // print with vold green the value of hst
+    ip = hst.substr(0, hst.find(':'));
+    checkifservername(ip, is_servername);
+    port = hst.substr(hst.find(':') + 1);
+    if (port == "" || hst.find_first_of(':') == std::string::npos) {
+        // print with wave red "port is empty"
+    // std::cout << "\033[5m\033[38;5;208mPORT IS EMPTY: '" << port << "'\033[0m" << std::endl;
+        it3->second.resp.response_error("400", fd);
+        multplixing::close_fd(fd, fd_maps[fd].epoll_fd);
+        isfdclosed = true;
     }
-    for (it = pars.s.begin(); it != pars.s.end(); it++) {
-            // std::cout << "CONFPORT: '" << (*it)->cont.find("listen")->second << "'" << " INCOMING PORT: '" << port << "'\n";
-        if ((*it)->cont.find("listen")->second == port) {
-            if ((*it)->cont["server_name"] == hst)
-                break;
-            if ((*it)->cont.find("host")->second == ip || ip == "localhost") {
-                if (ip_port) {
-                    break ;
-                }
-            }
-            else
-                continue;
+    std::vector<server *>::iterator it2;
+    for (it2 = fd_maps[fd].serv_.s.begin(); it2 != fd_maps[fd].serv_.s.end(); it2++) {
+        if (!is_servername)
+            break;
+        if ((*it2)->cont["listen"] == incoming_port && (*it2)->cont["server_name"] == hst) {
+            it = it2;
+            return (0);
+        }
+    }
+    for (it2 = fd_maps[fd].serv_.s.begin(); it2 != fd_maps[fd].serv_.s.end(); it2++) {
+        if ((*it2)->cont["listen"] == incoming_port && (*it2)->cont["host"] == incoming_ip) {
+            it = it2;
+            return (0);
         }
         else
             continue;
     }
-    if (it == pars.s.end()) {
-        perror("server NOT found");
-        exit(404);
-    }
-    return (0);
+    return (1);
 }
 
-void request::parse_header(std::string buffer, server &serv)
+int request::parse_heade(std::string buffer, server &serv, int fd)
 {
     std::istringstream stream (buffer);
     std::string line;
@@ -57,6 +87,12 @@ void request::parse_header(std::string buffer, server &serv)
     std::vector<std::string> vec = serv.isolate_str(line , ' ');
     method = vec[0];
     path   = vec[1];
+    if (buffer.find("Host") == std::string::npos) {
+        if (fd_maps[fd].resp.response_error("400", fd)) {
+            if (multplixing::close_fd(fd, fd_maps[fd].epoll_fd))
+                return 1;
+        }
+    }
     while (getline(stream, line))
     {
         if (line.find("\r") != std::string::npos)
@@ -68,7 +104,34 @@ void request::parse_header(std::string buffer, server &serv)
         else if (line.substr(0, 17) == "Transfer-Encoding")
             transfer_encoding = line.substr(19);
         else if (line.substr(0, 4) == "Host")
-            parseHost(line.substr(6), serv);
+            parseHost(line.substr(6), fd);
+        if (line == "\r")
+            return 0;
+    }
+    return 0;
+}
+
+void post::parse_header(std::string buffer)
+{
+    int t = 0;
+    std::istringstream stream (buffer);
+    std::string line;
+    while (getline(stream, line))
+    {
+        if (line.find("\r") != std::string::npos)
+            line.erase(line.find("\r"));
+        if (line.substr(0, 14) == "Content-Length")
+            content_length = line.substr(16);
+        else if (line.substr(0, 12) == "Content-Type" && t == 0)
+        {
+            content_type = line.substr(14);
+            t = 1;
+        }
+        else if (line.substr(0, 17) == "Transfer-Encoding")
+        {
+            transfer_encoding = line.substr(19);
+            g = 10;
+        }
         if (line == "\r")
             return ;
     }

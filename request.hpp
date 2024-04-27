@@ -1,14 +1,6 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
 
-#define RESET   "\033[0m"
-#define RED     "\033[31m"
-#define GREEN   "\033[32m"
-#define YELLOW  "\033[33m"
-#define BLUE    "\033[34m"
-#define MAGENTA "\033[35m"
-#define CYAN    "\033[36m"
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -77,7 +69,7 @@ class request
         void                                      print_map(std::map<std::string, std::string> m);
         int                                       rewrite_location(std::map<std::string, std::string> location_map);
         void                                      fill_response_varbls(std::string &path);
-        void                                      parse_header(std::string buffer, server &serv);
+        int                                      parse_heade(std::string buffer, server &serv, int fd);
         std::string                               get_delet_resp(std::string path, int stat);
         void                                      fill_extentions();
         std::streampos                            get_fileLenth(std::string path);
@@ -88,9 +80,10 @@ class request
         std::string                                get_full_uri( server &server, Client &obj);
         std::string                                find_longest_path(server &server, Client &obj);
         std::string                                delet_method(std::string path, server &server);
-        void                                       parse_req(std::string   rq, server &server, int fd);
+        int                                      parse_req(std::string   rq, server &server, int fd);
         int                                        one_of_allowed(std::string mehod, std::vector<std::string> allowed_methods);
-        int                                        parseHost(std::string hst, server& pars);
+        int                                        parseHost(std::string hst, int fd);
+        void                                       getServer(int fd);
 
         template <typename T>
         std::string to_string(T value) 
@@ -102,6 +95,7 @@ class request
         request();
         ~request();
 };
+
 
 
 #endif

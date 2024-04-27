@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   server.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ayylaaba <ayylaaba@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/02/05 14:46:12 by ayylaaba          #+#    #+#             */
-/*   Updated: 2024/02/15 16:28:31 by ayylaaba         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../server.hpp"
 #define CYAN    "\033[36m"
 #define RESET   "\033[0m"
@@ -149,11 +137,12 @@ void           server::message_response_stat()
         response_message["404"] = "Not Found";
         response_message["405"] = "Method Not Allowed";
         response_message["415"] = "Unsupported Media Type";
-        // response_message["501"] = "Not Implemented";
-        // response_message["502"] = "Bad Gateway";
-        // response_message["503"] = "Service Unavailable";
-        // response_message["504"] = "Gateway Timeout";
+        response_message["501"] = "Not Implemented";
+        response_message["502"] = "Bad Gateway";
+        response_message["503"] = "Service Unavailable";
+        response_message["504"] = "Gateway Timeout";
         response_message["505"] = "HTTP Version Not Supported";
+        response_message["500"] = "Internal Server Error";
         return ;
 }
 
@@ -327,7 +316,7 @@ int    server::parse_both(std::ifstream& rd_cont, std::string &str_)
 int        server::check_stat(std::string &stat_error)
 {
     if (stat_error.compare("403") && stat_error.compare("404") && 
-    stat_error.compare("301")) // you should add more i think ...
+    stat_error.compare("301") && stat_error.compare("500")) // you should add more i think ...
         return 1;
     return 0;
 }

@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   location.cpp                                       :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ayylaaba <ayylaaba@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/02/06 17:45:30 by ayylaaba          #+#    #+#             */
-/*   Updated: 2024/02/17 10:24:50 by ayylaaba         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../location.hpp"
 
 location::location(std::map<std::string, std::string> &c, std::vector <std::string> &v_s, std::map <std::string, std::string> &cgi_m, std::string &redirc)
