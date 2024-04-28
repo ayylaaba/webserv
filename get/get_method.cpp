@@ -3,6 +3,7 @@
 #include "../multplixing.hpp"
 # include "../cgi.hpp"
 
+int checkcontent = 0;
 extern std::map<int, Client> fd_maps;
 
 get_method::get_method(){
@@ -37,16 +38,19 @@ std::string getContent (std::string file, int fd, std::string& contenttype) {
         content = sstr.str();
         fileStream.close();
     }
-    if (fd_maps[fd].cgi_.extension == "php") {
+    if (fd_maps[fd].cgi_.extension == "php" && !fd_maps[fd].cgi_.is_error) {
         size_t pos = content.find("\r\n\r\n");
         contenttype = parsephpheader(content.substr(0, pos));
+        std::cout << contenttype << std::endl;
         if (pos != std::string::npos) {
             content = content.substr(pos + 4);
             return content;
         }
     }
-    else
-        contenttype = "text/html";
+    else {
+        if (!checkcontent)
+            contenttype = "text/html";
+    }
     return content;
 }
 
@@ -58,6 +62,7 @@ std::string getErrorPage(int fd, std::string stat, std::string& status, std::str
     if (fd_maps[fd].serv_.err_page.find(stat) != fd_maps[fd].serv_.err_page.end()) {
         std::cout << "\033[1;32m test:::: " << stat  << " | '" << fd_maps[fd].serv_.err_page[stat] << "'\033[0m" << std::endl;
         contenttype = fd_maps[fd].requst.extentions[fd_maps[fd].serv_.err_page[stat].substr(fd_maps[fd].serv_.err_page[stat].find_last_of(".") + 1)];
+        std::cout << "contenttype: " << contenttype << std::endl;
         return getContent(fd_maps[fd].serv_.err_page[stat], fd, contenttype);
     }
     else {
@@ -74,11 +79,9 @@ void cgi::sendResponse(int fd, std::string& response, std::string stat, std::str
     std::stringstream iss;
     std::string status = "200 OK";
     if (fd_maps[fd].cgi_.is_error) {
+        checkcontent = 1;
         response = getErrorPage(fd, stat, status, contenttype);
     };
-    // std::cout << "contenttype: " << contenttype << std::endl;
-    // std::cout << "Response: " << response << std::endl;
-    // exit(0);
     iss << response.length();
     std::string responseLength = iss.str();
     std::string httpResponse = "HTTP/1.1 " + status + "\r\n";
@@ -134,6 +137,8 @@ int    get_method::get_mthod(int fd)
             int wait = waitpid(fd_maps[fd].cgi_.clientPid, &status, WNOHANG);
             if (wait == fd_maps[fd].cgi_.clientPid) {
                 std::string content;
+                checkcontent = 0;
+                fd_maps[fd].cgi_.is_error = 0;
                 content = getContent(cgi_file, fd, contenttype);
                 if (WIFSIGNALED(status) || status) {
                     fd_maps[fd].cgi_.is_error = 1;
