@@ -82,7 +82,6 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     vec           = server.isolate_str(rq.substr(0, last) , ' ');
     method        = vec[0];
     path          = vec[1];
-    // std::cout << path << std::endl;
     http_version  = vec[2];    
     it->second.resp.response_message = server.response_message;
     if (path == "/favicon.ico")
@@ -95,9 +94,10 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     // std::cout << "uri: " << uri << std::endl;
     /********************* end **********************/
     std::cout << "is cgi: " << fd_maps[fd].is_cgi << std::endl;
-        uri = get_full_uri(server, it->second);
-    checkcgi(*this, fd_maps[fd].is_cgi, fd);
+    std::cout << "URI = " << it->second.requst.uri << std::endl;
+    uri = get_full_uri(server, it->second);
     std::cout << "\033[1;31m" << "uri: " << uri << "\033[0m" << std::endl;
+    checkcgi(*this, fd_maps[fd].is_cgi, fd);
     x = it->second.get.check_exist(uri);
     if (redirection_stat == 1) // 0000
     {

@@ -21,7 +21,6 @@ server::server(std::map<std::string, std::string> &cont_s, std::vector<location*
     cont = cont_s;
     l = l_;
     vec_of_locations = vec_of_locations_;
-    // std::cout << "vec_of_locations size: " << vec_of_locations.size() << "\n";
 }
 
 std::string     server::strtrim(std::string &str)
@@ -98,13 +97,10 @@ void        server::mange_file(const char* file)
     while (std::getline(rd_content, str)) // loop to get lines
     {
         str = strtrim(str);
-        if (str.empty())
+        if (str.empty() || isWhitespace(str) || str[0] == '#')
             continue;
-        // std::cout << "'" << str.compare("server") << "'" << "\n";
-        // exit(0);
         if (str.compare("server"))
             print_err("syntaxt_error server");
-        
         std::getline(rd_content, str); // store all servers
         str = strtrim(str);
         if (!str.compare("{"))
@@ -200,14 +196,14 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
         obj.l_token = 0;
         std::getline(rd_cont, str_l);
         str_l = strtrim(str_l);
+        if (isWhitespace(str_l) || str_l.empty()) // modify
+            return 1;
         str_l_vec = isolate_str(str_l, ' ');
         if (!str_l_vec[0].compare("location"))
         {
             check_size(str_l_vec, 'l');
-            // std::cout << "location after normale = " << controle_slash(str_l_vec[1]) << "\n";
             vec_of_locations.push_back(controle_slash(str_l_vec[1]));
             cont_l[str_l_vec[0]]    = controle_slash(str_l_vec[1]); // store location with its path
-            // std::cout << CYAN << "cont_l = " << cont_l[str_l_vec[0]] << "value = " << str_l_vec[1] << RESET << "\n";
             return 1 ;
         }
         else

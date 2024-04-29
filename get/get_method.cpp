@@ -118,16 +118,7 @@ int    get_method::get_mthod(int fd)
     fileSize = get_fileLenth(it->second.requst.uri); // get full lenth of the file
     extention_type = it->second.requst.get_exten_type(it->second.requst.uri);
     StringSize << fileSize;
-
-    if (check_path  == 2 && it->second.requst.redirct_loca)
-    {
-        if (it->second.requst.path[it->second.requst.path.length() -1] != '/')
-        {
-            err_stat = it->second.resp.response_error("301", fd);
-            if (err_stat)
-                return 1;
-        }
-    }
+    
     if (check_path == 1)
     {
         if (fd_maps[fd].cgi_.stat_cgi) {
@@ -183,16 +174,6 @@ int    get_method::get_mthod(int fd)
                 return 1;
             }
         }
-        // }
-        // else if(it->second.requst.x_cgi && it->second.requst.stat_cgi == "on")
-        // {
-        //     //work on cgi
-        //     it->second.cgi.cgi_work(fd);
-        //     it->second.requst.x_cgi = 0;
-        //     get_mthod(fd);
-            // std::cout << "1212222222222222\n";
-        //     exit (12);
-        // }
     }
     else if (check_path == 2 && it->second.requst.auto_index_stat)
     {
@@ -221,17 +202,11 @@ int    get_method::get_mthod(int fd)
     }
     else // generic function .
     { 
-        // std::cout << " Error Case " << "\n";
-        if (check_path == 3) // permission
+        err_stat = 0;
+        if (check_path == 3 || (check_path == 2  && !it->second.requst.auto_index_stat)) // permission
             err_stat = it->second.resp.response_error("403", fd);
-        std::ifstream   red(it->second.requst.uri.c_str());
-        char    buff[1024];
-        memset(buff,0,1024);
-        red.read(buff, 1024).gcount();
-        std::cout << "buff = " << buff << "\n";
         if (access(it->second.requst.uri.c_str(), F_OK) < 0)
              err_stat = it->second.resp.response_error("404", fd);
-        // else                 // exist
         if (err_stat)
             return 1;
     }
