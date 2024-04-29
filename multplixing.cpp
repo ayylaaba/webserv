@@ -195,7 +195,6 @@ void        multplixing::lanch_server(server parse)
                         else {
                             if (it_fd->second.resp.response_error("400", events[i].data.fd))
                             {
-                                std::cout << "1111111111111111\n";
                                 if (close_fd( events[i].data.fd, epoll_fd ))
                                     continue ;
                             }
@@ -223,7 +222,7 @@ void        multplixing::lanch_server(server parse)
                             fd_maps[events[i].data.fd].post_.j = 1;
                             fd_maps[events[i].data.fd].flagg = 0;
                         }
-                        std::cout << fd_maps[events[i].data.fd].post_.g << std::endl;
+                        // std::cout << fd_maps[events[i].data.fd].post_.g << std::endl;
                         if (fd_maps[events[i].data.fd].post_.g == 1)
                         {
                             //"bad request.\n";
@@ -273,11 +272,11 @@ void        multplixing::lanch_server(server parse)
                 else if (events[i].events & EPOLLOUT && !it_fd->second.rd_done && it_fd->second.u_can_send) // must not always enter to here i think ask about it 
                 {
                     // flag = 0;
-                    std::cout << "ready  writing " << " \n";
+                    // std::cout << "ready  writing " << " \n";
                     respo = 0;
                     if (!fd_maps[events[i].data.fd].requst.method.compare("GET")) {
                         respo = (*it_fd).second.get.get_mthod(events[i].data.fd);
-                        std::cout << "respo = " << respo << std::endl;
+                        // std::cout << "respo = " << respo << std::endl;
                     }
                     if (isfdclosed)
                     {
@@ -306,12 +305,12 @@ void        multplixing::lanch_server(server parse)
                         send(events[i].data.fd,response.c_str(), response.length(), 0);
                         respo = 1;
                     }
-                    std::cout << "\t\t stat kaml wla ba9i == "      << it_fd->second.rd_done << std::endl;
-                    std::cout <<"\t\t second.not_allow_method == " << it_fd->second.not_allow_method<< std::endl;
+                    // std::cout << "\t\t stat kaml wla ba9i == "      << it_fd->second.rd_done << std::endl;
+                    // std::cout <<"\t\t second.not_allow_method == " << it_fd->second.not_allow_method<< std::endl;
                     if (respo || it_fd->second.not_allow_method)
                     {
                         it_fd->second.not_allow_method = 0;
-                        std::cout << "\t\t SF KAML GHADI UTM7A HAD "  << events[i].data.fd << std::endl;
+                        // std::cout << "\t\t SF KAML GHADI UTM7A HAD "  << events[i].data.fd << std::endl;
                         if (close_fd( events[i].data.fd, epoll_fd ))
                             continue ;
                     }

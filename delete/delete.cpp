@@ -20,7 +20,7 @@ std::string     delete_::delet_method(std::string path, server &server, int fd)
     }
     if (access(path.c_str(), F_OK) < 0)
     {
-        std::cout << "file_exist === " << path << "\n";
+        // std::cout << "file_exist === " << path << "\n";
         if (it->second.resp.response_error("404", fd))
             return ("delete_stat");
     }
