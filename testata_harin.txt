@@ -16,3 +16,19 @@ segve
 
 print "GET / HTTP/1.1\r\nHost: :gfgfg::8080\r\n\r\n" | nc 127.0.0.1 8080
 hadi kat 5dam
+
+
+
+
+wld 3am smina testes
+
+1-  print "" | nc 127.0.0.1 8080 ==> it should return timeout
+2-  print "\r\n\r\n" | nc 127.0.0.1 8080 ===> it give a small SEGV
+3-  check the http version
+4 - need to chack the forbidden characters
+
+/file%20.html
+32
+char c = static_cast<char>(32)
+
+
