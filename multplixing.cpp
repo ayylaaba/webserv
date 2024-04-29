@@ -173,7 +173,6 @@ void        multplixing::lanch_server(server parse)
                     {
                         if (buffer.find("\r\n\r\n") != std::string::npos)
                         {
-                            std::cout << "uri: " << rq.uri << " | " << fd_maps[events[i].data.fd].is_cgi << std::endl;
                             if (rq.parse_req(buffer, parse, events[i].data.fd ) == 1) {
                                         continue ;
                             }

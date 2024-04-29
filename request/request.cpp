@@ -1,5 +1,6 @@
 #include "../request.hpp"
 #include "../Client.hpp"
+# include <iconv.h>
 #define MAX_PATH = 1000;
 extern std::map<int, Client> fd_maps;
 extern int query;
@@ -71,6 +72,28 @@ int    checkcgi(request& rq, int& iscgi, int fd) {
     return 0;
 }
 
+char hex_to_char(const std::string& hex) {
+    std::istringstream iss(hex);
+    int value;
+    iss >> std::hex >> value;
+    return static_cast<char>(value);
+}
+
+std::string hex_to_ascii(const std::string& input) {
+    std::string result;
+    for (size_t i = 0; i < input.length(); ++i) {
+        if (input[i] == '%') {
+            std::string hex_str = input.substr(i + 1, 2);
+            char hex_char = hex_to_char(hex_str);
+            result += hex_char;
+            i += 2;
+        } else {
+            result += input[i];
+        }
+    }
+    return result;
+}
+
 int            request::parse_req(std::string   rq, server &server, int fd) // you can remove the server argenent
 {
     if (parse_heade(rq, server, fd) == 1)
@@ -96,9 +119,10 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     std::cout << "is cgi: " << fd_maps[fd].is_cgi << std::endl;
     std::cout << "URI = " << it->second.requst.uri << std::endl;
     uri = get_full_uri(server, it->second);
+    if (access(uri.c_str(), F_OK) < 0)
+        uri = hex_to_ascii(uri);
     checkcgi(*this, fd_maps[fd].is_cgi, fd);
     std::cout << "\033[1;31m" << "uri: " << uri << "\033[0m" << std::endl;
-    sleep(5);
     x = it->second.get.check_exist(uri);
     if (redirection_stat == 1) // 0000
     {
