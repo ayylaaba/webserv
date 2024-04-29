@@ -90,8 +90,6 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
         it->second.not_allow_method = 1;
         return 0;
     }
-    // std::cout << "http_version: " << http_version << std::endl;
-    // exit (12);
     /********************* edited by mhassani *****************/
     // std::cout << "uri: " << uri << std::endl;
     /********************* end **********************/
@@ -100,6 +98,7 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     uri = get_full_uri(server, it->second);
     checkcgi(*this, fd_maps[fd].is_cgi, fd);
     std::cout << "\033[1;31m" << "uri: " << uri << "\033[0m" << std::endl;
+    sleep(5);
     x = it->second.get.check_exist(uri);
     if (redirection_stat == 1) // 0000
     {
