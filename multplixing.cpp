@@ -195,14 +195,14 @@ void        multplixing::lanch_server(server parse)
                             fd_maps[events[i].data.fd].flagg = 1;
                         }
                         /**************** should be checked *********************/
-                        // else {
-                        //     if (it_fd->second.resp.response_error("400", events[i].data.fd))
-                        //     {
-                        //         std::cout << "1111111111111111\n";
-                        //         if (close_fd( events[i].data.fd, epoll_fd ))
-                        //             continue ;
-                        //     }
-                        // }
+                        else {
+                            if (it_fd->second.resp.response_error("400", events[i].data.fd))
+                            {
+                                std::cout << "1111111111111111\n";
+                                if (close_fd( events[i].data.fd, epoll_fd ))
+                                    continue ;
+                            }
+                        }
                         /****************        end        *********************/
                     }
                     /**************** FOR POST METHOD *********************/
@@ -232,7 +232,7 @@ void        multplixing::lanch_server(server parse)
                             //"bad request.\n";
                             if (it_fd->second.resp.response_error("400", events[i].data.fd))
                             {
-                                std::cout << "why?\n";
+                                // std::cout << "why?\n";
                                 fd_maps[events[i].data.fd].post_.g = 0;
                                 if (close_fd(events[i].data.fd, epoll_fd))
                                     continue ;
