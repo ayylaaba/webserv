@@ -46,7 +46,6 @@ Client::~Client()
     kill(cgi_.clientPid, 9);
     waitpid(cgi_.clientPid, NULL, 0);
     unlink(cgi_.file_out.c_str());
-    std::cout << "file deleted ==>" << unlink(cgi_.file_out.c_str()) << std::endl;
 }
 
 Client::Client()

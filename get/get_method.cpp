@@ -166,10 +166,12 @@ int    get_method::get_mthod(int fd)
         {
             char    buff[1024];
             int     x = it->second.read_f.read(buff, 1024).gcount();
+            std::cout << x << "\n";
             if (it->second.read_f.gcount() > 0)
                 send(fd, buff, x, 0);
             if (it->second.read_f.eof() || it->second.read_f.gcount() < 1024)
             {
+                std::cout << "the END \n";
                 it->second.rd_done = 1;
                 return 1;
             }

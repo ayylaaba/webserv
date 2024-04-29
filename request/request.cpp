@@ -96,8 +96,9 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     std::cout << "is cgi: " << fd_maps[fd].is_cgi << std::endl;
     std::cout << "URI = " << it->second.requst.uri << std::endl;
     uri = get_full_uri(server, it->second);
-    std::cout << "\033[1;31m" << "uri: " << uri << "\033[0m" << std::endl;
     checkcgi(*this, fd_maps[fd].is_cgi, fd);
+    std::cout << "\033[1;31m" << "uri: " << uri << "\033[0m" << std::endl;
+    sleep(5);
     x = it->second.get.check_exist(uri);
     if (redirection_stat == 1) // 0000
     {
@@ -108,6 +109,7 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     }
     if (vec.size() != 3 || last == std::string::npos)
     {
+        std::cout << "3333333333333333\n";
         state = it->second.resp.response_error("400", fd);    
         it->second.not_allow_method = 1;
         return 0;        
