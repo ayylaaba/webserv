@@ -157,8 +157,6 @@ int    get_method::get_mthod(int fd)
                 fd_maps[fd].cgi_.is_error = 1;
                 std::string timeout = "GATEWAY TIMEOUT";
                 std::cout << "\033[1;34m" << fd_maps[fd].cgi_.clientPid << "\033[0m" << std::endl;
-                kill(fd_maps[fd].cgi_.clientPid, 9);
-                waitpid(fd_maps[fd].cgi_.clientPid, NULL, 0);
                 cgi::sendResponse(fd, timeout, "504", contenttype);
                 isfdclosed = true;
                 return 1;

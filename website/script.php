@@ -3,7 +3,7 @@
 header('Content-Type: image/jpeg');
 
 // // Path to the image file
-$imagePath = '/home/mallaoui/Desktop/web/website/outfile_1714256966-862344.jpeg';
+$imagePath = '/home/mallaoui/Desktop/web/website/folder/outfile_1714336839-975987.png';
 
 // // Output the image file
 readfile($imagePath);

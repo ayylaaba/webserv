@@ -52,7 +52,7 @@ int request::parseHost(std::string hst, int fd) {
     ip = hst.substr(0, hst.find(':'));
     checkifservername(ip, is_servername);
     port = hst.substr(hst.find(':') + 1);
-    if (server::check_ip(ip) || server::valid_range(port))
+    if ((server::check_ip(ip) || server::valid_range(port)) && !is_servername)
         it3->second.resp.response_error("400", fd);
     if (port == "" || hst.find_first_of(':') == std::string::npos) {
         it3->second.resp.response_error("400", fd);

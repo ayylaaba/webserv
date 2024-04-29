@@ -2,6 +2,7 @@
 #include "../Client.hpp"
 #define MAX_PATH = 1000;
 extern std::map<int, Client> fd_maps;
+extern int query;
 
 
 int               request::one_of_allowed(std::string mehod, std::vector<std::string> allowed_methods)
@@ -48,6 +49,28 @@ int            request::check_path_access(std::string path)
     return (0);
 }
 
+int    checkcgi(request& rq, int& iscgi, int fd) {
+    std::string query;
+    if (rq.uri.find("?") != std::string::npos) {
+        query = rq.uri.substr(rq.uri.find("?"));
+        rq.uri = rq.uri.substr(0, rq.uri.find("?"));
+        query = query.substr(query.find_last_of('?') + 1);
+        fd_maps[fd].cgi_.QUERY_STRING = query;
+    }
+    std::string path = rq.uri;
+    std::string::iterator it = path.begin() + path.find_last_of("/") + 1;
+    if (it == path.end()) {
+        iscgi = 0;
+        return 0;
+    }
+    std::string file = std::string(it, path.end());
+    if (fd_maps[fd].requst.cgi_map.find(file.substr(file.find_last_of(".") + 1)) != fd_maps[fd].requst.cgi_map.end()) {
+        iscgi = 1;
+        return 1;
+    }
+    return 0;
+}
+
 int            request::parse_req(std::string   rq, server &server, int fd) // you can remove the server argenent
 {
     if (parse_heade(rq, server, fd) == 1)
@@ -59,17 +82,23 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     vec           = server.isolate_str(rq.substr(0, last) , ' ');
     method        = vec[0];
     path          = vec[1];
+    // std::cout << path << std::endl;
     http_version  = vec[2];    
     it->second.resp.response_message = server.response_message;
     if (path == "/favicon.ico")
     {
-        state = it->second.resp.response_error("204", fd);
+        state = it->second.resp.response_error("202", fd);
         it->second.not_allow_method = 1;
         return 0;
     }
-    uri = get_full_uri(server, it->second); //
+    /********************* edited by mhassani *****************/
+    // std::cout << "uri: " << uri << std::endl;
+    /********************* end **********************/
+    std::cout << "is cgi: " << fd_maps[fd].is_cgi << std::endl;
+        uri = get_full_uri(server, it->second);
+    checkcgi(*this, fd_maps[fd].is_cgi, fd);
+    std::cout << "\033[1;31m" << "uri: " << uri << "\033[0m" << std::endl;
     x = it->second.get.check_exist(uri);
-
     if (redirection_stat == 1) // 0000
     {
         std::string msg = "HTTP/1.1 301 Moved Permanently\r\nlocation: " + it->second.redirec_path + "\r\n\r\n";

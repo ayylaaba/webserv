@@ -37,6 +37,7 @@ class Client
         int                                 version_not_suported;
         int                                 file_not_supported;
         std::streampos                      filePosition;
+        int                                 is_cgi;
         get_method                          get;
         request                             requst;
         response                            resp;
