@@ -151,7 +151,7 @@ bool post::post_method(std::string buffer, int fd)
 std::string post::parse_boundary_header(std::string buffer)
 {
     std::string CT = "";
-    if (buffer.find("Content-Type") != std::string::npos) // not sure;
+    if (buffer.find("Content-Type") != std::string::npos && buffer.find("\r\n\r\n") != std::string::npos) // not sure;
     {
         CT = buffer.substr(buffer.find("Content-Type"));
         CT = CT.substr(14);
@@ -209,16 +209,16 @@ bool post::boundary(std::string buffer)
             return true;
         }
     }
-    // if (v == 0)
-    // {
-    //     CType = parse_boundary_header(concat);
-    //     concat = cat_header(concat);
-    //     if (extension_founded(CType) == true)
-    //         outFile.open((generateUniqueFilename() + extension).c_str());
-    //     else
-    //         std::cerr << "414 unsupported media type\n";
-    //     v = 1;
-    // }
+    if (v == 0)
+    {
+        CType = parse_boundary_header(concat);
+        concat = cat_header(concat);
+        if (extension_founded(CType) == true)
+            outFile.open((generateUniqueFilename() + extension).c_str());
+        else
+            std::cerr << "414 unsupported media type\n";
+        v = 1;
+    }
     if(outFile.is_open())
     {
         outFile << concat;

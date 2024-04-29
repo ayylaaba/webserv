@@ -121,7 +121,7 @@ void        multplixing::lanch_server(server parse)
             check_cgi = false;
             isfdclosed = false;
             // flag = 0;
-            std::cout << "client is alive : " << events[i].data.fd << std::endl;
+            // std::cout << "client is alive : " << events[i].data.fd << std::endl;
             if ((it = std::find(serverSocket.begin(), serverSocket.end(), events[i].data.fd)) != serverSocket.end()) {
                 //"BEFORE CLIENT FD VALUE :" << events[i].data.fd << std::endl;
                 //"New Client Connected\n";
@@ -158,7 +158,7 @@ void        multplixing::lanch_server(server parse)
                 else if (events[i].events & EPOLLIN)
                 {
                     fd_maps[events[i].data.fd].cgi_.stat_cgi = 0;
-                    std::cout << "client is reading :" << events[i].data.fd << " \n";
+                    // std::cout << "client is reading :" << events[i].data.fd << " \n";
                     buffer.resize(BUFFER_SIZE);
                     bytesRead = recv(events[i].data.fd , &buffer[0], BUFFER_SIZE, 0);
                     //"\n\n\t -> bytesRead ==== " << bytesRead << std::endl;
@@ -169,8 +169,6 @@ void        multplixing::lanch_server(server parse)
                        if (close_fd( events[i].data.fd, epoll_fd ))
                             continue ;
                     }
-                    // //buffer << "\n";
-
                     if (!fd_maps[events[i].data.fd].flagg)
                     {
                         if (buffer.find("\r\n\r\n") != std::string::npos)
