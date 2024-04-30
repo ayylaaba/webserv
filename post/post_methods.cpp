@@ -222,16 +222,23 @@ bool post::boundary(std::string buffer)
         }
         else if (outFile.is_open() == true)
         {
-            if (concat.find("\r\n") != std::string::npos && (concat.length() - sep.length()) > 0)
+            if (/*concat.find("\r\n") != std::string::npos && */ (concat.length() - sep.length()) > 0)
             {
                 try
                 {
                     outFile << concat.substr(0, concat.length() - sep.length());
+                }
+                catch (const std::exception& e)
+                {
+                    std::cerr << "Exception caught11111111" << std::endl;
+                }
+                try
+                {
                     concat = concat.substr(concat.length() - sep.length());
                 }
                 catch (const std::exception& e)
                 {
-                    std::cerr << "Exception caught11111111: " << e.what() << std::endl;
+                    std::cerr << "Exception caught22222222" << std::endl;
                 }
             }
             return false;
