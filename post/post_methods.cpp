@@ -228,11 +228,14 @@ bool post::boundary(std::string buffer)
     if(outFile.is_open())
     {
         // need update;
-        if (concat.find("\r\n") != std::string::npos)
+        if (concat.find("\r\n--") != std::string::npos) // this condition is maybe will not work always.
         {
-            std::cout << "a part of sep is founded.\n";
-            outFile << concat.substr(0, concat.find("\r\n"));
-            concat = concat.substr(concat.find("\r\n"));
+            std::cout << "a part of sep is founded..............................\n";
+            outFile << concat.substr(0, concat.find("\r\n--"));
+            concat = concat.substr(concat.find("\r\n--") + 2);
+            outFile.close();
+            outFile.clear();
+            v = 0;
             // + 2 so concat will contain only part of separator left to concat later with buffer;
         }
         else
