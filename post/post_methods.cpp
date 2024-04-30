@@ -84,7 +84,7 @@ bool post::extension_founded(std::string contentType)
 
 std::string sep = "";
 
-bool post::post_method(std::string buffer, int fd)
+bool post::post_method(std::string buffer, int fd, int bytesRead)
 {
     std::map<int, Client>::iterator   it_ = fd_maps.find(fd);
     // std::cout << "Upload_path = " << it_->second.requst.upload_path << "\n";
@@ -142,7 +142,7 @@ bool post::post_method(std::string buffer, int fd)
     if (transfer_encoding == "chunked")
         return chunked(buffer, it_->second.serv_.max_body, it_->second.requst.upload_path);
     else if (content_type == "multipart/form-data")
-        return boundary(buffer);
+        return boundary(buffer, bytesRead);
     else
         return binary(buffer, it_->second.serv_.max_body, it_->second.requst.upload_path);
     return false;
@@ -168,16 +168,38 @@ std::string post::cat_header(std::string buffer)
 int v = 0;
 std::string CType = "";
 
-bool post::boundary(std::string buffer)
+bool post::containsValidCharacters(const std::string& str) 
 {
-    /* ----------------------------108074513576787105840635
+    int j = 0;
+    if (!str[j] || str.length() < 1 || str[j] != '-')
+        return false;
+    for (std::string::size_type i = 0; i < 28 && str[i]; ++i)
+    {
+        if (str[i] != '-')
+            return false; // Invalid separator
+    }
+    for (std::string::size_type i = 28; i < str.length(); ++i)
+    {
+        char c = str[i];
+        if (!(c >= '0' && c <= '9'))
+            return false;
+    }
+    return true;
+}
+
+bool post::boundary(std::string buffer, int bytesRead)
+{
+    /* ----------------------------261896924513075486597166
     Content-Disposition: form-data; name=""; filename="boundary.txt"
     Content-Type: text/plain \r\n\r\n*/
     concat += buffer;
-    // std::cout << buffer << std::endl;
+    (void)bytesRead;
+    // std::cout << bytesRead << std::endl;
+    // std::cout << sep << std::endl;
+    // exit(500);
     while(concat.find(sep) != std::string::npos)
     {
-        if (v == 0 && concat.find("\r\n\r\n") != std::string::npos)
+        if (v == 0)
         {
             CType = parse_boundary_header(concat);
             concat = cat_header(concat);
@@ -192,7 +214,10 @@ bool post::boundary(std::string buffer)
             v = 1;
         }
         // else
+        // {
+        //     std::cout << "not found.\n";
         //     return false;
+        // }
         // if the file is open and the body containe another separator
         if(outFile.is_open() && concat.find(sep) != std::string::npos)
         {
@@ -200,6 +225,7 @@ bool post::boundary(std::string buffer)
             concat = concat.substr(concat.find(sep));
             outFile.close();
             outFile.clear();
+            sleep(1);
             v = 0;
         }
         if (concat == (sep + "--\r\n"))
@@ -228,19 +254,21 @@ bool post::boundary(std::string buffer)
     if(outFile.is_open())
     {
         // need update;
-        if (concat.find("\r\n--") != std::string::npos) // this condition is maybe will not work always.
+        if (concat.find("\r\n") != std::string::npos && containsValidCharacters(concat.substr(concat.find("\r\n") + 2))) // this condition is maybe will not work always.
         {
-            std::cout << "a part of sep is founded..............................\n";
-            outFile << concat.substr(0, concat.find("\r\n--"));
-            concat = concat.substr(concat.find("\r\n--") + 2);
+            std::cout << "\033[1;32ma part of sep is founded..............................\033[0m\n";
+            std::cout << "\033[1;32mthe part is: \033[0m" << concat.substr(concat.find("\r\n") + 2) << std::endl;
+            outFile << concat.substr(0, concat.find("\r\n"));
+            concat = concat.substr(concat.find("\r\n") + 2);
             outFile.close();
             outFile.clear();
+            sleep(1);
             v = 0;
             // + 2 so concat will contain only part of separator left to concat later with buffer;
         }
         else
         {
-            std::cout << "no part of sep is founded.\n";
+            std::cout << "\033[1;31mno part of sep is founded.\033[0m\n";
             outFile << concat;
             concat.clear();
         }
