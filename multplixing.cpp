@@ -219,7 +219,7 @@ void        multplixing::lanch_server(server parse)
                             }
                         }
                         /********************** end ********************/
-                        if (fd_maps[events[i].data.fd].post_.post_method(buffer, events[i].data.fd, bytesRead)  && !it_fd->second.not_allow_method) {
+                        if (fd_maps[events[i].data.fd].post_.post_method(buffer, events[i].data.fd)  && !it_fd->second.not_allow_method) {
                             fd_maps[events[i].data.fd].post_.j = 1;
                             fd_maps[events[i].data.fd].flagg = 0;
                         }

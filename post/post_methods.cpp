@@ -84,7 +84,7 @@ bool post::extension_founded(std::string contentType)
 
 std::string sep = "";
 
-bool post::post_method(std::string buffer, int fd, int bytesRead)
+bool post::post_method(std::string buffer, int fd)
 {
     std::map<int, Client>::iterator   it_ = fd_maps.find(fd);
     // std::cout << "Upload_path = " << it_->second.requst.upload_path << "\n";
@@ -142,7 +142,7 @@ bool post::post_method(std::string buffer, int fd, int bytesRead)
     if (transfer_encoding == "chunked")
         return chunked(buffer, it_->second.serv_.max_body, it_->second.requst.upload_path);
     else if (content_type == "multipart/form-data")
-        return boundary(buffer, bytesRead);
+        return boundary(buffer);
     else
         return binary(buffer, it_->second.serv_.max_body, it_->second.requst.upload_path);
     return false;
@@ -187,90 +187,63 @@ bool post::containsValidCharacters(const std::string& str)
     return true;
 }
 
-bool post::boundary(std::string buffer, int bytesRead)
+bool post::boundary(std::string buffer)
 {
     /* ----------------------------261896924513075486597166
     Content-Disposition: form-data; name=""; filename="boundary.txt"
     Content-Type: text/plain \r\n\r\n*/
     concat += buffer;
-    (void)bytesRead;
-    // std::cout << bytesRead << std::endl;
-    // std::cout << sep << std::endl;
-    // exit(500);
-    while(concat.find(sep) != std::string::npos)
+    while(1)
     {
-        if (v == 0)
+        if (v == 0 && concat.find(sep) == 0)
         {
-            CType = parse_boundary_header(concat);
-            concat = cat_header(concat);
-            // i removed header of boundary and remain only body of the file;
-            if (extension_founded(CType) || buffer.find("filename") != std::string::npos)
-                outFile.open((generateUniqueFilename() + extension).c_str());
-            else
+            if (concat.find("\r\n\r\n") != std::string::npos)
             {
-                std::cerr << "extension not founded!\n";
-                return false;
+                CType = parse_boundary_header(concat);
+                concat = cat_header(concat);
+                if (extension_founded(CType) || buffer.find("filename") != std::string::npos)
+                    outFile.open((generateUniqueFilename() + extension).c_str());
+                else
+                {
+                    std::cerr << "extension not founded!\n";
+                    return false;
+                }
+                v = 1;
             }
-            v = 1;
+            else
+                return false;
         }
-        // else
-        // {
-        //     std::cout << "not found.\n";
-        //     return false;
-        // }
-        // if the file is open and the body containe another separator
-        if(outFile.is_open() && concat.find(sep) != std::string::npos)
+        if(outFile.is_open() == true && (concat.find("\r\n" + sep) != std::string::npos)) 
         {
-            outFile << concat.substr(0, concat.find(sep) - 2); // -2 of \r\n;
-            concat = concat.substr(concat.find(sep));
+            outFile << concat.substr(0, concat.find("\r\n" + sep));
             outFile.close();
-            outFile.clear();
-            sleep(1);
+            concat = concat.substr(concat.find(sep));
             v = 0;
+        }
+        else if (outFile.is_open() == true)
+        {
+            if (concat.find("\r\n") != std::string::npos && (concat.length() - sep.length()) > 0)
+            {
+                try
+                {
+                    outFile << concat.substr(0, concat.length() - sep.length());
+                    concat = concat.substr(concat.length() - sep.length());
+                }
+                catch (const std::exception& e)
+                {
+                    std::cerr << "Exception caught11111111: " << e.what() << std::endl;
+                }
+            }
+            return false;
         }
         if (concat == (sep + "--\r\n"))
         {
             std::cout << "done1.\n";
             concat.clear();
             outFile.close();
-            outFile.clear();
             v = 0;
             f = 0;
             return true;
-        }
-    }
-    // if (v == 0 && concat.find("\r\n\r\n") != std::string::npos)
-    // {
-    //     std::cout << "parse again boundary header.\n";
-    //     sleep(3);
-    //     CType = parse_boundary_header(concat);
-    //     concat = cat_header(concat);
-    //     if (extension_founded(CType))
-    //         outFile.open((generateUniqueFilename() + extension).c_str());
-    //     else
-    //         std::cerr << "414 unsupported media type\n";
-    //     v = 1;
-    // }
-    if(outFile.is_open())
-    {
-        // need update;
-        if (concat.find("\r\n") != std::string::npos && containsValidCharacters(concat.substr(concat.find("\r\n") + 2))) // this condition is maybe will not work always.
-        {
-            std::cout << "\033[1;32ma part of sep is founded..............................\033[0m\n";
-            std::cout << "\033[1;32mthe part is: \033[0m" << concat.substr(concat.find("\r\n") + 2) << std::endl;
-            outFile << concat.substr(0, concat.find("\r\n"));
-            concat = concat.substr(concat.find("\r\n") + 2);
-            outFile.close();
-            outFile.clear();
-            sleep(1);
-            v = 0;
-            // + 2 so concat will contain only part of separator left to concat later with buffer;
-        }
-        else
-        {
-            std::cout << "\033[1;31mno part of sep is founded.\033[0m\n";
-            outFile << concat;
-            concat.clear();
         }
     }
     return false;
