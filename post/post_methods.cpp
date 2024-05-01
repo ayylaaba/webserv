@@ -184,6 +184,10 @@ bool post::boundary(std::string buffer)
                 concat = cat_header(concat);
                 if (extension_founded(CType) || buffer.find("filename") != std::string::npos)
                     outFile.open((generateUniqueFilename() + extension).c_str());
+                else if (buffer.find("filename") == std::string::npos)
+                {
+                    outFile.open((generateUniqueFilename() + ".txt").c_str());
+                }
                 else
                 {
                     std::cerr << "extension not founded!\n";
