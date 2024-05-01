@@ -200,34 +200,17 @@ bool post::boundary(std::string buffer)
         }
         if(outFile.is_open() == true && (concat.find("\r\n" + sep) != std::string::npos)) 
         {
-            try
-            {
-                outFile << concat.substr(0, concat.find("\r\n" + sep));
-                outFile.close();
-                concat = concat.substr(concat.find(sep));
-            }
-            catch(const std::exception& e)
-            {
-                std::cerr << "Exception caught44444444\n";
-            }
+            outFile << concat.substr(0, concat.find("\r\n" + sep));
+            outFile.close();
+            concat = concat.substr(concat.find(sep));
             v = 0;
         }
         else if (outFile.is_open() == true)
         {
             if (concat.length() > sep.length())
             {
-                try
-                {
-                    // std::cout << concat.length() << std::endl;
-                    // std::cout << sep.length() << std::endl;
-                    outFile << concat.substr(0, concat.length() - sep.length());
-                    concat = concat.substr(concat.length() - sep.length());
-                }
-                catch (const std::exception& e)
-                {
-                    std::cerr << "Exception caught22222222\n";
-                    exit(15);
-                }
+                outFile << concat.substr(0, concat.length() - sep.length());
+                concat = concat.substr(concat.length() - sep.length());
             }
             return false;
         }
