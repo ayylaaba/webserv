@@ -69,6 +69,7 @@ bool post::is_end_of_chunk(std::string max_body_size, std::string upload_path)
 
 bool post::extension_founded(std::string contentType)
 {
+    extension = "";
     map m = read_file_extensions("fileExtensions");
     map::iterator it = m.find(contentType);
     // std::cout <<"$#" <<contentType << "$%" << std::endl;
@@ -167,6 +168,7 @@ std::string post::cat_header(std::string buffer)
 
 int v = 0;
 std::string CType = "";
+std::vector<std::string> vec;
 
 bool post::boundary(std::string buffer)
 {
@@ -174,6 +176,7 @@ bool post::boundary(std::string buffer)
     Content-Disposition: form-data; name=""; filename="boundary.txt"
     Content-Type: text/plain \r\n\r\n*/
     concat += buffer;
+    std::string file;
     while(1)
     {
         if (v == 0 && concat.find(sep) == 0)
@@ -182,18 +185,25 @@ bool post::boundary(std::string buffer)
             {
                 CType = parse_boundary_header(concat);
                 concat = cat_header(concat);
-                if (extension_founded(CType) || buffer.find("filename") != std::string::npos)
-                    outFile.open((generateUniqueFilename() + extension).c_str());
-                else if (buffer.find("filename") == std::string::npos)
+                if (extension_founded(CType) && buffer.find("filename") != std::string::npos)
                 {
-                    outFile.open((generateUniqueFilename() + ".txt").c_str());
+                    file = generateUniqueFilename() + extension;
+                    outFile.open(file.c_str());
+                    vec.push_back(file);
+                    v = 1;
                 }
                 else
                 {
-                    std::cerr << "extension not founded!\n";
-                    return false;
+                    for (size_t i = 0; i < vec.size(); i++)
+                        remove(vec.at(i).c_str());
+                    outFile.close();
+                    vec.clear();
+                    concat.clear();
+                    g = 2;
+                    v = 0;
+                    f = 0;
+                    return true;
                 }
-                v = 1;
             }
             else
                 return false;

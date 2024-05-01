@@ -234,7 +234,7 @@ void        multplixing::lanch_server(server parse)
                                     continue ;
                             }
                         }
-                        else if (fd_maps[events[i].data.fd].post_.g == 2)
+                        else if (fd_maps[events[i].data.fd].post_.g == 2) // unsupported media type;
                         {
                             // //"g value is: " << fd_maps[events[i].data.fd].post_.g << std::endl;
                             //"415 error message\n";
