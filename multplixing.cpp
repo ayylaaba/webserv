@@ -301,7 +301,7 @@ void        multplixing::lanch_server(server parse)
                     }
                     if (!fd_maps[events[i].data.fd].requst.method.compare("POST") && fd_maps[events[i].data.fd].post_.j)
                     {
-                        std::string response = "HTTP/1.1 201 OK\r\nContent-Type: text/html\r\n\r\nhello";
+                        std::string response = "HTTP/1.1 201 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\nhello";
                         send(events[i].data.fd,response.c_str(), response.length(), 0);
                         respo = 1;
                     }

@@ -113,7 +113,7 @@ int main(int ac, char **av)
         rd_sock = read(new_sock, buffer, sizeof(buffer));  // Read from the accepted socket
         // // std::cout << "buffer = " << std::string(buffer, rd_sock) << std::endl;
         printf ("--> %s \n", buffer);
-        char server_buffer[3000] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<h1>Hello, World!</h1>";
+        char server_buffer[3000] = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n<h1>Hello, World!</h1>";
         send(new_sock, server_buffer, strlen(server_buffer), 0);
         // // std::cout << server_buffer << "\n";  
         close(new_sock);  // Close the accepted socket, not the listening socket

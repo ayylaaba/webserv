@@ -1,11 +1,19 @@
-<?php
-// Set the content type header to indicate that the response is an image
-header('Content-Type: image/jpeg');
 
-// // Path to the image file
-$imagePath = '/home/mallaoui/Desktop/web/website/folder/outfile_1714336839-975987.png';
 
-// // Output the image file
-readfile($imagePath);
-echo "hello"
-?>
+<!DOCTYPE html> 
+<?php 
+    setcookie("Auction_Item", "Luxury Car", time() + 2 * 24 * 60 * 60); 
+?> 
+<html> 
+<body> 
+    <?php 
+        echo "cookie is created."
+    ?> 
+    <p> 
+        <strong>Note:</strong>  
+        You might have to reload the  
+        page to see the value of the cookie. 
+    </p> 
+  
+</body> 
+</html>

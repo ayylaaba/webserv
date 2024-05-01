@@ -119,9 +119,9 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     std::cout << "is cgi: " << fd_maps[fd].is_cgi << std::endl;
     std::cout << "URI = " << it->second.requst.uri << std::endl;
     uri = get_full_uri(server, it->second);
+    checkcgi(*this, fd_maps[fd].is_cgi, fd);
     if (access(uri.c_str(), F_OK) < 0)
         uri = hex_to_ascii(uri);
-    checkcgi(*this, fd_maps[fd].is_cgi, fd);
     std::cout << "\033[1;31m" << "uri: " << uri << "\033[0m" << std::endl;
     x = it->second.get.check_exist(uri);
     if (redirection_stat == 1) // 0000
@@ -299,7 +299,7 @@ bool            request::check_autoindex(std::map<std::string, std::string> loca
 
 void        request::fill_extentions()
 {   
-    extentions["html"] = "text/html"; 
+    extentions["html"] = "text/html; charset=UTF-8"; 
     extentions["txt"]  = "text/plain"; 
     extentions["jpg"] = "image/jpg"; 
     extentions["jpeg"] = "image/jpeg";
@@ -328,7 +328,7 @@ void        request::fill_extentions()
     extentions["mpd"] = "application/dash+xml";
     extentions["db"] = "application/x-sqlite3";
     extentions["md"] = "text/markdown";
-    extentions["py"] =  "text/html";
+    extentions["py"] =  "text/html; charset=UTF-8";
 }
 
 void request::reset() 

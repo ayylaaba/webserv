@@ -32,7 +32,7 @@ int     response::response_error(std::string stat, int fd)
             err_file.read(buff_, 1024).gcount();
             response = buff_;
             size << response.size();
-            response = get_header(stat, "text/html", size.str(), it->second);
+            response = get_header(stat, "text/html; charset=UTF-8", size.str(), it->second);
             response += it->second.get.to_string(buff_);
             // // std::cout << "response -> " << response << " <-\n";
             send(fd, response.c_str(), response.size(), 0);
@@ -52,7 +52,7 @@ int     response::response_error(std::string stat, int fd)
             _respond_stat += "<html><head><title> " + it_message_error->second + "</title></head>";
             _respond_stat +=  "<body> <strong>" + it_message_error->second + " </strong></body></html>";
             size << _respond_stat.size();
-            response = get_header(stat, "text/html", size.str(), it->second);
+            response = get_header(stat, "text/html; charset=UTF-8", size.str(), it->second);
             // std::cout << "*********************************************************** " << response.size() << "\n";
             response += _respond_stat;
             send(fd, response.c_str(), response.size(), 0);

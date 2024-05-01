@@ -102,8 +102,11 @@ char **cgi::fillCgiEnv(int fd) {
     env_v.push_back("REDIRECT_STATUS=CGI");
     env_v.push_back("PATH_TRANSLATED=" + fd_maps[fd].requst.uri);
     env_v.push_back("QUERY_STRING=" + QUERY_STRING);
+    env_v.push_back("HTTP_COOKIE=" + fd_maps[fd].cgi_.HTTP_COOKIE);
     char **env = new char*[env_v.size() + 1];
     for (std::vector<std::string>::iterator it = env_v.begin(); it != env_v.end(); it++) {
+        // print with blue the env
+        std::cout << "\033[34m" << *it << "\033[0m" << std::endl;
         env[it - env_v.begin()] = strdup(it->c_str());
     }
     env[env_v.size()] = NULL;

@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 
-print("Hello World")
+import http.cookies 
+ 
+# Create a cookie 
+cookie = http.cookies.SimpleCookie() 
+cookie["cookie_name"] = "cookie_value" 
+cookie["cookie_name"]["expires"] = "Wed, 01-Feb-2023 12:00:00 GMT" 
+ 
+# Set the cookie in the header of a response 
+print("Set-Cookie: " + cookie.output(header="").strip()) 
 
 # import cgi
 # # while 1:
