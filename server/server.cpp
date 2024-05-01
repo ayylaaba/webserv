@@ -142,7 +142,7 @@ void           server::message_response_stat()
         // response_message["502"] = "Bad Gateway";
         // response_message["503"] = "Service Unavailable";
         response_message["504"] = "Gateway Timeout";
-        // response_message["505"] = "HTTP Version Not Supported";
+        response_message["505"] = "HTTP Version Not Supported";
         response_message["500"] = "Internal Server Error";
         return ;
 }
@@ -342,10 +342,10 @@ int    server::parse_both(std::ifstream& rd_cont, std::string &str_)
 
 int        server::check_stat(std::string &stat_error)
 {
-    if (stat_error.compare("403") && stat_error.compare("404") && 
-    stat_error.compare("301") && stat_error.compare("500") && stat_error.compare("504")) // you should add more i think ...
-        return 1;
-    return 0;
+    int a = std::atoi(stat_error.c_str());
+    if (a > 199 && a < 599) // you should add more i think ...
+        return 0;
+    return 1;
 }
 
 void        server::check_size(std::vector<std::string> &s, char c)

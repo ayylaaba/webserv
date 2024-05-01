@@ -104,7 +104,13 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     vec           = server.isolate_str(rq.substr(0, last) , ' ');
     method        = vec[0];
     path          = vec[1];
-    http_version  = vec[2];    
+    http_version  = vec[2];
+    if (http_version.compare("HTTP/1.1"))
+    {
+        state = it->second.resp.response_error("505", fd);    
+        it->second.not_allow_method = 1;
+        return 0;
+    } 
     it->second.resp.response_message = server.response_message;
     if (path == "/favicon.ico")
     {
@@ -146,12 +152,6 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     if ((method.compare("DELETE") && method.compare("POST") && method.compare("GET")) || !method_state)
     {
         state = it->second.resp.response_error("405", fd);
-        it->second.not_allow_method = 1;
-        return 0;
-    }
-    if (http_version.compare("HTTP/1.1"))
-    {
-        state = it->second.resp.response_error("505", fd);    
         it->second.not_allow_method = 1;
         return 0;
     }

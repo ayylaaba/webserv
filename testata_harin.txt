@@ -16,3 +16,21 @@ segve
 
 print "GET / HTTP/1.1\r\nHost: :gfgfg::8080\r\n\r\n" | nc 127.0.0.1 8080
 hadi kat 5dam
+
+
+wld 3am smina testes
+
+1-  print "" | nc 127.0.0.1 8080 ==> it should return timeout HTA YJI   # ABED
+2-  print "\r\n\r\n" | nc 127.0.0.1 8080 ===> it give a small SEGV      # NO MORE SERGV
+3-  check the http version                                              DONE
+4 - need to chack the forbidden characters                              DONE
+
+
+5- index maybe there is problem check it ??
+6- method not found in location ==> return method not allowed
+7 - in case of other extation you should to read Content and return it to the browser , unsupported cpp
+8 - error in cgi try to getting file.php
+9 - file .html is issue
+10 - every server need at least one location
+11 - you don't need a sever name if the port and ip is unique in file.conf
+12 - 
