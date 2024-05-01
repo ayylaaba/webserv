@@ -185,15 +185,15 @@ bool post::boundary(std::string buffer)
             {
                 CType = parse_boundary_header(concat);
                 concat = cat_header(concat);
-                if (extension_founded(CType) && buffer.find("filename") != std::string::npos)
+                if (extension_founded(CType))
                 {
                     file = generateUniqueFilename() + extension;
                     outFile.open(file.c_str());
                     vec.push_back(file);
-                    v = 1;
                 }
                 else
                 {
+                    std::cout << "unsupported.\n";
                     for (size_t i = 0; i < vec.size(); i++)
                         remove(vec.at(i).c_str());
                     outFile.close();
@@ -204,6 +204,7 @@ bool post::boundary(std::string buffer)
                     f = 0;
                     return true;
                 }
+                v = 1;
             }
             else
                 return false;
