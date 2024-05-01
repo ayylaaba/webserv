@@ -1,6 +1,5 @@
 #include "../request.hpp"
 #include "../Client.hpp"
-# include <iconv.h>
 #define MAX_PATH = 1000;
 extern std::map<int, Client> fd_maps;
 extern int query;

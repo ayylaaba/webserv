@@ -52,6 +52,7 @@ public:
     bool boundary(std::string buffer);
     std::string parse_boundary_header(std::string buffer);
     std::string cat_header(std::string buffer);
+    bool containsValidCharacters(const std::string& str);
 };
 
 

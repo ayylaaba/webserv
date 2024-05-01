@@ -53,6 +53,18 @@ std::string getContent (std::string file, int fd, std::string& contenttype, std:
     else {
         if (!checkcontent)
             contenttype = "text/html; charset=UTF-8";
+        std::istringstream stream (content);
+        std::string line;
+        std::string contenttype;
+        while (getline(stream, line))
+        {
+            if (line.substr(0, 12) == "Content-Type") {
+                contenttype = line.substr(14);
+            }
+            if (line.substr(0, 10) == "Set-Cookie") {
+                cookie = line.substr(12);
+            }
+        }
     }
     return content;
 }
@@ -92,9 +104,6 @@ void cgi::sendResponse(int fd, std::string& response, std::string stat, std::str
     httpResponse += "Content-Length: " + responseLength + "\r\n";
     httpResponse += "\r\n";
     httpResponse += response;
-
-    // std::cout << httpResponse << std::endl;
-
     send(fd, httpResponse.c_str(), httpResponse.length(), 0);
     multplixing::close_fd(fd, fd_maps[fd].epoll_fd);
 }
