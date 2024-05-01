@@ -81,7 +81,7 @@ std::map<std::string, std::string>        response::message_response_stat(/*std:
     response_message["415"] = "Unsupported Media Type";
     response_message["500"] = "Internal Server Error";
     response_message["505"] = "HTTP Version Not Supported";
-    // response_message["501"] = "Not Implemented";
+    response_message["501"] = "Not Implemented";
     // response_message["502"] = "Bad Gateway";
     // response_message["503"] = "Service Unavailable";
     response_message["504"] = "Gateway Timeout";

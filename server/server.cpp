@@ -138,7 +138,7 @@ void           server::message_response_stat()
         response_message["404"] = "Not Found";
         response_message["405"] = "Method Not Allowed";
         response_message["415"] = "Unsupported Media Type";
-        // response_message["501"] = "Not Implemented";
+        response_message["501"] = "Not Implemented";
         // response_message["502"] = "Bad Gateway";
         // response_message["503"] = "Service Unavailable";
         response_message["504"] = "Gateway Timeout";
@@ -217,23 +217,6 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
         }
         if (rd_cont.eof() && s_token == 1)
             print_err ("syntaxt_error }");
-        // std::getline(rd_cont, str_l);
-        // str_l = strtrim(str_l);
-        // if (isWhitespace(str_l) || str_l.empty()) // modify
-        //     return 1;
-        // str_l_vec = isolate_str(str_l, ' ');
-        // if (!str_l_vec[0].compare("location"))
-        // {
-        //     check_size(str_l_vec, 'l');
-        //     vec_of_locations.push_back(controle_slash(str_l_vec[1]));
-        //     cont_l[str_l_vec[0]]    = controle_slash(str_l_vec[1]); // store location with its path
-        //     return 1 ;
-        // }
-        // else
-        // {
-        //     check = "on";
-        //     return 0;
-        // }
     }
     return 1;
 }
@@ -316,10 +299,6 @@ int    server::parse_both(std::ifstream& rd_cont, std::string &str_)
                         return 2; 
                     if (c == 1)
                         continue;
-                    // if (parse_loca(rd_cont, str_) == 1)
-                    //     continue;
-                    // else
-                    //     return 1;
                 }
             }
         }

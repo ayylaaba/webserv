@@ -7,10 +7,18 @@ extern int query;
 
 int               request::one_of_allowed(std::string mehod, std::vector<std::string> allowed_methods)
 {
+    if (allowed_methods.empty())
+    {
+        k = 1;
+        return 0;
+    }
     std::vector<std::string>::iterator it = allowed_methods.begin();
     std::vector<std::string>::iterator ite = allowed_methods.end();
     if ((*it).compare("allow_methods"))
+    {
+        exit (1);
         it++;
+    }
     while (it != ite)
     {
         if (!it->compare(mehod))
@@ -138,7 +146,6 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     }
     if (vec.size() != 3 || last == std::string::npos)
     {
-        std::cout << "3333333333333333\n";
         state = it->second.resp.response_error("400", fd);    
         it->second.not_allow_method = 1;
         return 0;        
@@ -151,9 +158,17 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     }
     if ((method.compare("DELETE") && method.compare("POST") && method.compare("GET")) || !method_state)
     {
-        state = it->second.resp.response_error("405", fd);
-        it->second.not_allow_method = 1;
-        return 0;
+        if ((method.compare("DELETE") && method.compare("POST") && method.compare("GET")))
+        {
+            state = it->second.resp.response_error("501", fd);
+            it->second.not_allow_method = 1;
+            return 0;
+        }
+        if (!method_state && !k){
+            state = it->second.resp.response_error("405", fd);
+            it->second.not_allow_method = 1;
+            return 0;
+        }
     }
     if (!get_exten_type(uri).compare("Unsupported"))
     {
@@ -384,6 +399,7 @@ request::request(/* args */){
     redirect_path = "";
     x_cgi = 0;
     x = 0;
+    k = 0;
     fill_extentions();
 }
 request::~request(){
