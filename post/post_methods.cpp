@@ -168,25 +168,6 @@ std::string post::cat_header(std::string buffer)
 int v = 0;
 std::string CType = "";
 
-bool post::containsValidCharacters(const std::string& str) 
-{
-    int j = 0;
-    if (!str[j] || str.length() < 1 || str[j] != '-')
-        return false;
-    for (std::string::size_type i = 0; i < 28 && str[i]; ++i)
-    {
-        if (str[i] != '-')
-            return false; // Invalid separator
-    }
-    for (std::string::size_type i = 28; i < str.length(); ++i)
-    {
-        char c = str[i];
-        if (!(c >= '0' && c <= '9'))
-            return false;
-    }
-    return true;
-}
-
 bool post::boundary(std::string buffer)
 {
     /* ----------------------------261896924513075486597166
@@ -215,30 +196,33 @@ bool post::boundary(std::string buffer)
         }
         if(outFile.is_open() == true && (concat.find("\r\n" + sep) != std::string::npos)) 
         {
-            outFile << concat.substr(0, concat.find("\r\n" + sep));
-            outFile.close();
-            concat = concat.substr(concat.find(sep));
+            try
+            {
+                outFile << concat.substr(0, concat.find("\r\n" + sep));
+                outFile.close();
+                concat = concat.substr(concat.find(sep));
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << "Exception caught44444444\n";
+            }
             v = 0;
         }
         else if (outFile.is_open() == true)
         {
-            if (/*concat.find("\r\n") != std::string::npos && */ (concat.length() - sep.length()) > 0)
+            if (concat.length() > sep.length())
             {
                 try
                 {
+                    // std::cout << concat.length() << std::endl;
+                    // std::cout << sep.length() << std::endl;
                     outFile << concat.substr(0, concat.length() - sep.length());
-                }
-                catch (const std::exception& e)
-                {
-                    std::cerr << "Exception caught11111111" << std::endl;
-                }
-                try
-                {
                     concat = concat.substr(concat.length() - sep.length());
                 }
                 catch (const std::exception& e)
                 {
-                    std::cerr << "Exception caught22222222" << std::endl;
+                    std::cerr << "Exception caught22222222\n";
+                    exit(15);
                 }
             }
             return false;

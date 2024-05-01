@@ -147,7 +147,6 @@ void        multplixing::lanch_server(server parse)
                 //"Client " << client_socket << " Added To Map\n";
             }
             else {
-
                 std::map<int, Client>::iterator it_fd = fd_maps.find(events[i].data.fd);
                 //"Client with an event :" << events[i].data.fd << std::endl;
                 if (events[i].events & EPOLLRDHUP || events[i].events & EPOLLERR  || events[i].events & EPOLLHUP) 
@@ -166,7 +165,7 @@ void        multplixing::lanch_server(server parse)
                         buffer.resize(bytesRead);
                     if (bytesRead <= 0)
                     {
-                       if (close_fd( events[i].data.fd, epoll_fd ))
+                    if (close_fd( events[i].data.fd, epoll_fd ))
                             continue ;
                     }
                     if (!fd_maps[events[i].data.fd].flagg)
@@ -268,7 +267,6 @@ void        multplixing::lanch_server(server parse)
                         fd_maps[events[i].data.fd].cgi_.cgi_method(rq, events[i].data.fd);
                         check_cgi = true;
                     }
-                    
                 }
                 else if (events[i].events & EPOLLOUT && !it_fd->second.rd_done && it_fd->second.u_can_send) // must not always enter to here i think ask about it 
                 {
@@ -302,7 +300,7 @@ void        multplixing::lanch_server(server parse)
                     }
                     if (!fd_maps[events[i].data.fd].requst.method.compare("POST") && fd_maps[events[i].data.fd].post_.j)
                     {
-                        std::string response = "HTTP/1.1 201 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\nhello";
+                        std::string response = "HTTP/1.1 201 OK\r\nContent-Type: text/html\r\n\r\nhello";
                         send(events[i].data.fd,response.c_str(), response.length(), 0);
                         respo = 1;
                     }

@@ -30,7 +30,7 @@ class cgi
         void                                checkifcgi(request& rq, int& iscgi, int fd);
         void                                cgi_method(request& rq, int fd);
         char **                             fillCgiEnv(int fd);
-        static void                         sendResponse(int fd, std::string& response, std::string stat, std::string& contenttype, std::string& cookie);
+        static void                                sendResponse(int fd, std::string& response, std::string stat, std::string& contenttype);
         std::string                         cgi_stat;
         std::string                         compiler;
         std::string                         file_out;
@@ -50,7 +50,6 @@ class cgi
         std::string                         SCRIPT_FILENAME;
         std::string                         REDIRECT_STATUS;
         std::string                         SERVER_PORT;
-        std::string                         HTTP_COOKIE;
 
         // ---------- //
         

@@ -42,7 +42,6 @@ class request
         unsigned long                       g;
         size_t                              check;
         int                                 x;
-        int                                 k;
         int                                 redirection_stat;
         int                                 redirct_loca;
         int                                 check_redi;

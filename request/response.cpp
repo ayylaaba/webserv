@@ -32,7 +32,7 @@ int     response::response_error(std::string stat, int fd)
             err_file.read(buff_, 1024).gcount();
             response = buff_;
             size << response.size();
-            response = get_header(stat, "text/html; charset=UTF-8", size.str(), it->second);
+            response = get_header(stat, "text/html", size.str(), it->second);
             response += it->second.get.to_string(buff_);
             // // std::cout << "response -> " << response << " <-\n";
             send(fd, response.c_str(), response.size(), 0);
@@ -52,7 +52,7 @@ int     response::response_error(std::string stat, int fd)
             _respond_stat += "<html><head><title> " + it_message_error->second + "</title></head>";
             _respond_stat +=  "<body> <strong>" + it_message_error->second + " </strong></body></html>";
             size << _respond_stat.size();
-            response = get_header(stat, "text/html; charset=UTF-8", size.str(), it->second);
+            response = get_header(stat, "text/html", size.str(), it->second);
             // std::cout << "*********************************************************** " << response.size() << "\n";
             response += _respond_stat;
             send(fd, response.c_str(), response.size(), 0);
@@ -80,8 +80,8 @@ std::map<std::string, std::string>        response::message_response_stat(/*std:
     response_message["413"] = "Request Entity Too Large";
     response_message["415"] = "Unsupported Media Type";
     response_message["500"] = "Internal Server Error";
-    response_message["505"] = "HTTP Version Not Supported";
-    response_message["501"] = "Not Implemented";
+    // response_message["505"] = "Version Not Supported";
+    // response_message["501"] = "Not Implemented";
     // response_message["502"] = "Bad Gateway";
     // response_message["503"] = "Service Unavailable";
     response_message["504"] = "Gateway Timeout";
@@ -93,10 +93,10 @@ std::string      response::get_header(std::string wich, std::string exten, std::
     // // std::cout << "--------------> Begin get_header <------------------" << " \n";
     std::string response;
     std::map<std::string , std::string>::iterator it = response_message.find(wich);
-    int a = std::atoi(wich.c_str());
     if (it != response_message.end())
     {
-        if (a != 301 && (a >= 200 && a < 599))
+        if (!wich.compare("200") || !wich.compare("404") || !wich.compare("403") || !wich.compare("500") || !wich.compare("400")
+        || !wich.compare("405") || !wich.compare("204") || !wich.compare("415") || !wich.compare("409") || !wich.compare("413"))
         {
             response = "HTTP/1.1 ";
             response +=  it->first + " " + it->second + "\r\n";
