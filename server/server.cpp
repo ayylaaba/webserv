@@ -107,8 +107,9 @@ void        server::mange_file(const char* file)
         if (!str.compare("{"))
         {
             s_token++;
-            parse_both(rd_content,str);
-            if ((!str.compare("}") && s_token == 1))
+            int g = parse_both(rd_content, str);
+            // parse_both(rd_content,str);
+            if (/*(!str.compare("}") && s_token == 1)*/ (g == 2 && s_token == 2))
             {
                 check_duplicate_location(vec_of_locations);
                 s.push_back(new server(cont, l, vec_of_locations));
@@ -195,23 +196,44 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
     if (obj.l_token == 2)
     {
         obj.l_token = 0;
-        std::getline(rd_cont, str_l);
-        str_l = strtrim(str_l);
-        if (isWhitespace(str_l) || str_l.empty()) // modify
-            return 1;
-        str_l_vec = isolate_str(str_l, ' ');
-        if (!str_l_vec[0].compare("location"))
+        while (std::getline(rd_cont, str_l))
         {
-            check_size(str_l_vec, 'l');
-            vec_of_locations.push_back(controle_slash(str_l_vec[1]));
-            cont_l[str_l_vec[0]]    = controle_slash(str_l_vec[1]); // store location with its path
-            return 1 ;
+            str_l = strtrim(str_l);
+            str_l_vec = isolate_str(str_l, ' '); // }
+            if (isWhitespace(str_l) || str_l.empty()) // modify
+                continue;
+            if (!str_l_vec[0].compare("location"))
+            {
+                check_size(str_l_vec, 'l');
+                vec_of_locations.push_back(controle_slash(str_l_vec[1]));
+                cont_l[str_l_vec[0]]    = controle_slash(str_l_vec[1]); // store location with its path
+                return 1 ;
+            }
+            if (!str_l_vec[0].compare("}"))
+            {
+                s_token++;
+                return 0;
+            }
         }
-        else
-        {
-            check = "on";
-            return 0;
-        }
+        if (rd_cont.eof() && s_token == 1)
+            print_err ("syntaxt_error }");
+        // std::getline(rd_cont, str_l);
+        // str_l = strtrim(str_l);
+        // if (isWhitespace(str_l) || str_l.empty()) // modify
+        //     return 1;
+        // str_l_vec = isolate_str(str_l, ' ');
+        // if (!str_l_vec[0].compare("location"))
+        // {
+        //     check_size(str_l_vec, 'l');
+        //     vec_of_locations.push_back(controle_slash(str_l_vec[1]));
+        //     cont_l[str_l_vec[0]]    = controle_slash(str_l_vec[1]); // store location with its path
+        //     return 1 ;
+        // }
+        // else
+        // {
+        //     check = "on";
+        //     return 0;
+        // }
     }
     return 1;
 }
@@ -289,10 +311,15 @@ int    server::parse_both(std::ifstream& rd_cont, std::string &str_)
                 if (!str_.compare("{"))
                 {
                     obj.l_token++;
-                    if (parse_loca(rd_cont, str_) == 1)
+                    int c = parse_loca(rd_cont, str_);
+                    if (!c)
+                        return 2; 
+                    if (c == 1)
                         continue;
-                    else
-                        return 1;
+                    // if (parse_loca(rd_cont, str_) == 1)
+                    //     continue;
+                    // else
+                    //     return 1;
                 }
             }
         }
