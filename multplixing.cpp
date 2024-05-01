@@ -143,10 +143,12 @@ void        multplixing::lanch_server(server parse)
                 fd_maps[client_socket].is_cgi     = 0;
                 fd_maps[client_socket].start_time = time(NULL);
                 fd_maps[client_socket].flagg      = 0;
+                fd_maps[client_socket].istimeout  = false;
                 //"AFTER CLIENT FD VALUE :" << events[i].data.fd << std::endl;
                 //"Client " << client_socket << " Added To Map\n";
             }
             else {
+                end = time(NULL);
                 std::map<int, Client>::iterator it_fd = fd_maps.find(events[i].data.fd);
                 //"Client with an event :" << events[i].data.fd << std::endl;
                 if (events[i].events & EPOLLRDHUP || events[i].events & EPOLLERR  || events[i].events & EPOLLHUP) 
@@ -154,18 +156,23 @@ void        multplixing::lanch_server(server parse)
                     if (close_fd( events[i].data.fd, epoll_fd ))
                         continue ;
                 }
+                if ((difftime(end, fd_maps[events[i].data.fd].start_time) > MAX_TIME) && !fd_maps[events[i].data.fd].istimeout) {
+                    fd_maps[events[i].data.fd].resp.response_error("408", events[i].data.fd);
+                    close_fd(events[i].data.fd, epoll_fd);   
+                    continue;
+                }
                 else if (events[i].events & EPOLLIN)
                 {
                     fd_maps[events[i].data.fd].cgi_.stat_cgi = 0;
-                    // std::cout << "client is reading :" << events[i].data.fd << " \n";
+                    std::cout << "client is reading :" << events[i].data.fd << " \n";
                     buffer.resize(BUFFER_SIZE);
                     bytesRead = recv(events[i].data.fd , &buffer[0], BUFFER_SIZE, 0);
-                    //"\n\n\t -> bytesRead ==== " << bytesRead << std::endl;
+                    std::cout << "client with an event : " << events[i].data.fd << " \n";
                     if (bytesRead > 0)
                         buffer.resize(bytesRead);
-                    if (bytesRead <= 0)
+                    if (bytesRead < 0)
                     {
-                    if (close_fd( events[i].data.fd, epoll_fd ))
+                        if (close_fd( events[i].data.fd, epoll_fd ))
                             continue ;
                     }
                     if (!fd_maps[events[i].data.fd].flagg)
@@ -192,13 +199,6 @@ void        multplixing::lanch_server(server parse)
                             fd_maps[events[i].data.fd].flagg = 1;
                         }
                         /**************** should be checked *********************/
-                        else {
-                            if (it_fd->second.resp.response_error("400", events[i].data.fd))
-                            {
-                                if (close_fd( events[i].data.fd, epoll_fd ))
-                                    continue ;
-                            }
-                        }
                         /****************        end        *********************/
                     }
                     /**************** FOR POST METHOD *********************/
@@ -270,8 +270,8 @@ void        multplixing::lanch_server(server parse)
                 }
                 else if (events[i].events & EPOLLOUT && !it_fd->second.rd_done && it_fd->second.u_can_send) // must not always enter to here i think ask about it 
                 {
-                    // flag = 0;
-                    // std::cout << "ready  writing " << " \n";
+                    fd_maps[events[i].data.fd].istimeout = true;
+                    std::cout << "client " << events[i].data.fd << " is ready to send" << " \n";
                     respo = 0;
                     if (!fd_maps[events[i].data.fd].requst.method.compare("GET")) {
                         respo = (*it_fd).second.get.get_mthod(events[i].data.fd);
@@ -300,8 +300,11 @@ void        multplixing::lanch_server(server parse)
                     }
                     if (!fd_maps[events[i].data.fd].requst.method.compare("POST") && fd_maps[events[i].data.fd].post_.j)
                     {
-                        std::string response = "HTTP/1.1 201 OK\r\nContent-Type: text/html\r\n\r\nhello";
-                        send(events[i].data.fd,response.c_str(), response.length(), 0);
+                        if (it_fd->second.resp.response_error("201", events[i].data.fd))
+                        {
+                            if (close_fd( events[i].data.fd, epoll_fd ))
+                                continue ;
+                        }
                         respo = 1;
                     }
                     // std::cout << "\t\t stat kaml wla ba9i == "      << it_fd->second.rd_done << std::endl;
@@ -314,15 +317,7 @@ void        multplixing::lanch_server(server parse)
                             continue ;
                     }
                 }
-                else {
-                    end = time(NULL);
-                    if (difftime(end, fd_maps[events[i].data.fd].start_time) > MAX_TIME) {
-                        fd_maps[events[i].data.fd].resp.response_error("408", events[i].data.fd);
-                        close_fd(events[i].data.fd, epoll_fd);
-                        
-                        continue;
-                    }
-                }
+                
             }
         }
     }

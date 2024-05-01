@@ -47,6 +47,7 @@ class Client
         cgi                                 cgi_;
         time_t                              start_time;
         int                                 flagg;
+        bool                                istimeout;
         Client(std::string uri_);
         Client(const Client& copy);
         std::map<std::string, std::string>  message_response_stat();

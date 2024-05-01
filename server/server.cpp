@@ -107,8 +107,9 @@ void        server::mange_file(const char* file)
         if (!str.compare("{"))
         {
             s_token++;
-            parse_both(rd_content,str);
-            if ((!str.compare("}") && s_token == 1))
+            int g = parse_both(rd_content, str);
+            // parse_both(rd_content,str);
+            if (/*(!str.compare("}") && s_token == 1)*/ (g == 2 && s_token == 2))
             {
                 check_duplicate_location(vec_of_locations);
                 s.push_back(new server(cont, l, vec_of_locations));
@@ -129,6 +130,7 @@ void           server::message_response_stat()
         // response_message["202"] = "Accepted";
         response_message["204"] = "No Content";
         response_message["301"] = "Moved Permanently";
+        response_message["408"] = "Request Timeout";
         // response_message["302"] = "Found";
         // response_message["304"] = "Not Modified";
         response_message["400"] = "Bad Request";
@@ -137,11 +139,11 @@ void           server::message_response_stat()
         response_message["404"] = "Not Found";
         response_message["405"] = "Method Not Allowed";
         response_message["415"] = "Unsupported Media Type";
-        // response_message["501"] = "Not Implemented";
+        response_message["501"] = "Not Implemented";
         // response_message["502"] = "Bad Gateway";
         // response_message["503"] = "Service Unavailable";
         response_message["504"] = "Gateway Timeout";
-        // response_message["505"] = "HTTP Version Not Supported";
+        response_message["505"] = "HTTP Version Not Supported";
         response_message["500"] = "Internal Server Error";
         return ;
 }
@@ -195,23 +197,27 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
     if (obj.l_token == 2)
     {
         obj.l_token = 0;
-        std::getline(rd_cont, str_l);
-        str_l = strtrim(str_l);
-        if (isWhitespace(str_l) || str_l.empty()) // modify
-            return 1;
-        str_l_vec = isolate_str(str_l, ' ');
-        if (!str_l_vec[0].compare("location"))
+        while (std::getline(rd_cont, str_l))
         {
-            check_size(str_l_vec, 'l');
-            vec_of_locations.push_back(controle_slash(str_l_vec[1]));
-            cont_l[str_l_vec[0]]    = controle_slash(str_l_vec[1]); // store location with its path
-            return 1 ;
+            str_l = strtrim(str_l);
+            str_l_vec = isolate_str(str_l, ' '); // }
+            if (isWhitespace(str_l) || str_l.empty()) // modify
+                continue;
+            if (!str_l_vec[0].compare("location"))
+            {
+                check_size(str_l_vec, 'l');
+                vec_of_locations.push_back(controle_slash(str_l_vec[1]));
+                cont_l[str_l_vec[0]]    = controle_slash(str_l_vec[1]); // store location with its path
+                return 1 ;
+            }
+            if (!str_l_vec[0].compare("}"))
+            {
+                s_token++;
+                return 0;
+            }
         }
-        else
-        {
-            check = "on";
-            return 0;
-        }
+        if (rd_cont.eof() && s_token == 1)
+            print_err ("syntaxt_error }");
     }
     return 1;
 }
@@ -289,10 +295,11 @@ int    server::parse_both(std::ifstream& rd_cont, std::string &str_)
                 if (!str_.compare("{"))
                 {
                     obj.l_token++;
-                    if (parse_loca(rd_cont, str_) == 1)
+                    int c = parse_loca(rd_cont, str_);
+                    if (!c)
+                        return 2; 
+                    if (c == 1)
                         continue;
-                    else
-                        return 1;
                 }
             }
         }
@@ -315,10 +322,10 @@ int    server::parse_both(std::ifstream& rd_cont, std::string &str_)
 
 int        server::check_stat(std::string &stat_error)
 {
-    if (stat_error.compare("403") && stat_error.compare("404") && 
-    stat_error.compare("301") && stat_error.compare("500") && stat_error.compare("504")) // you should add more i think ...
-        return 1;
-    return 0;
+    int a = std::atoi(stat_error.c_str());
+    if (a > 199 && a < 599) // you should add more i think ...
+        return 0;
+    return 1;
 }
 
 void        server::check_size(std::vector<std::string> &s, char c)

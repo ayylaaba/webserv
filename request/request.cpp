@@ -7,10 +7,18 @@ extern int query;
 
 int               request::one_of_allowed(std::string mehod, std::vector<std::string> allowed_methods)
 {
+    if (allowed_methods.empty())
+    {
+        k = 1;
+        return 0;
+    }
     std::vector<std::string>::iterator it = allowed_methods.begin();
     std::vector<std::string>::iterator ite = allowed_methods.end();
     if ((*it).compare("allow_methods"))
+    {
+        exit (1);
         it++;
+    }
     while (it != ite)
     {
         if (!it->compare(mehod))
@@ -71,6 +79,28 @@ int    checkcgi(request& rq, int& iscgi, int fd) {
     return 0;
 }
 
+char hex_to_char(const std::string& hex) {
+    std::istringstream iss(hex);
+    int value;
+    iss >> std::hex >> value;
+    return static_cast<char>(value);
+}
+
+std::string hex_to_ascii(const std::string& input) {
+    std::string result;
+    for (size_t i = 0; i < input.length(); ++i) {
+        if (input[i] == '%') {
+            std::string hex_str = input.substr(i + 1, 2);
+            char hex_char = hex_to_char(hex_str);
+            result += hex_char;
+            i += 2;
+        } else {
+            result += input[i];
+        }
+    }
+    return result;
+}
+
 int            request::parse_req(std::string   rq, server &server, int fd) // you can remove the server argenent
 {
     if (parse_heade(rq, server, fd) == 1)
@@ -82,7 +112,13 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     vec           = server.isolate_str(rq.substr(0, last) , ' ');
     method        = vec[0];
     path          = vec[1];
-    http_version  = vec[2];    
+    http_version  = vec[2];
+    if (http_version.compare("HTTP/1.1"))
+    {
+        state = it->second.resp.response_error("505", fd);    
+        it->second.not_allow_method = 1;
+        return 0;
+    } 
     it->second.resp.response_message = server.response_message;
     if (path == "/favicon.ico")
     {
@@ -97,8 +133,9 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     std::cout << "URI = " << it->second.requst.uri << std::endl;
     uri = get_full_uri(server, it->second);
     checkcgi(*this, fd_maps[fd].is_cgi, fd);
+    if (access(uri.c_str(), F_OK) < 0)
+        uri = hex_to_ascii(uri);
     std::cout << "\033[1;31m" << "uri: " << uri << "\033[0m" << std::endl;
-    sleep(5);
     x = it->second.get.check_exist(uri);
     if (redirection_stat == 1) // 0000
     {
@@ -109,7 +146,6 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     }
     if (vec.size() != 3 || last == std::string::npos)
     {
-        std::cout << "3333333333333333\n";
         state = it->second.resp.response_error("400", fd);    
         it->second.not_allow_method = 1;
         return 0;        
@@ -122,15 +158,17 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     }
     if ((method.compare("DELETE") && method.compare("POST") && method.compare("GET")) || !method_state)
     {
-        state = it->second.resp.response_error("405", fd);
-        it->second.not_allow_method = 1;
-        return 0;
-    }
-    if (http_version.compare("HTTP/1.1"))
-    {
-        state = it->second.resp.response_error("505", fd);    
-        it->second.not_allow_method = 1;
-        return 0;
+        if ((method.compare("DELETE") && method.compare("POST") && method.compare("GET")))
+        {
+            state = it->second.resp.response_error("501", fd);
+            it->second.not_allow_method = 1;
+            return 0;
+        }
+        if (!method_state && !k){
+            state = it->second.resp.response_error("405", fd);
+            it->second.not_allow_method = 1;
+            return 0;
+        }
     }
     if (!get_exten_type(uri).compare("Unsupported"))
     {
@@ -275,7 +313,7 @@ bool            request::check_autoindex(std::map<std::string, std::string> loca
 
 void        request::fill_extentions()
 {   
-    extentions["html"] = "text/html"; 
+    extentions["html"] = "text/html; charset=UTF-8"; 
     extentions["txt"]  = "text/plain"; 
     extentions["jpg"] = "image/jpg"; 
     extentions["jpeg"] = "image/jpeg";
@@ -304,7 +342,7 @@ void        request::fill_extentions()
     extentions["mpd"] = "application/dash+xml";
     extentions["db"] = "application/x-sqlite3";
     extentions["md"] = "text/markdown";
-    extentions["py"] =  "text/html";
+    extentions["py"] =  "text/html; charset=UTF-8";
 }
 
 void request::reset() 
@@ -361,6 +399,7 @@ request::request(/* args */){
     redirect_path = "";
     x_cgi = 0;
     x = 0;
+    k = 0;
     fill_extentions();
 }
 request::~request(){
