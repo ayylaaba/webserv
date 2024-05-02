@@ -1,7 +1,8 @@
 #include "Client.hpp"
 #include "cgi.hpp"
 #include "multplixing.hpp"
-extern std::map<int, Client> fd_maps;
+extern std::map<int, Client *> fd_maps;
+extern std::vector<void *> garbage;
 
 cgi::cgi(){
     // // std::cout << "Cgi Constructor \n";
@@ -26,23 +27,23 @@ void        cgi::fill_env_cgi(Client &obj)
 
 void        cgi::cgi_work(int fd)
 {
-    std::map<int, Client>::iterator it = fd_maps.find(fd);
-    std::cout <<"hahhahahhahahahha" << it->second.requst.uri << "\n";
-    fill_env_cgi(it->second);
+    std::map<int, Client *>::iterator it = fd_maps.find(fd);
+    std::cout <<"hahhahahhahahahha" << it->second->requst.uri << "\n";
+    fill_env_cgi(*it->second);
 
     int fd_out = open("file.txt", O_RDWR | O_CREAT, 0666);
 
     if (fd_out < 1)
-        it->second.serv_.print_err("file error");
+        it->second->serv_.print_err("file error");
     if (dup2(fd_out, 1) == -1) 
-        it->second.serv_.print_err("dup error");
+        it->second->serv_.print_err("dup error");
     close(fd_out);
     // char* pythonScriptPath = requestedFilePath;
     char* pythonInterpreter = strdup("/usr/bin/python3");
-    char* args[] = {pythonInterpreter, strdup(it->second.requst.uri.c_str()), NULL};
+    char* args[] = {pythonInterpreter, strdup(it->second->requst.uri.c_str()), NULL};
 
     if (execve(pythonInterpreter, args, env) == -1) 
-        it->second.serv_.print_err("execve error");
+        it->second->serv_.print_err("execve error");
     // std::ofstream   cgi_file("file.txt");
     exit (12);
 }
@@ -51,14 +52,14 @@ void        cgi::cgi_work(int fd)
 // {s
 //     // std::cout << "\nCGI Function"<< "\n";
 //     std::string exten;
-//     size_t      pos = it->second.requst.uri.find_last_of(".");
+//     size_t      pos = it->second->requst.uri.find_last_of(".");
 
-//     // std::cout << "uri = " << it->second.requst.uri << "\n";
+//     // std::cout << "uri = " << it->second->requst.uri << "\n";
 
-//     exten = it->second.requst.uri.substr(pos + 1);
+//     exten = it->second->requst.uri.substr(pos + 1);
 
-//     std::map<std::string, std::string>::iterator it_bi = it->second.serv_.cgi_map.begin();
-//     std::map<std::string, std::string>::iterator it_end = it->second.serv_.cgi_map.end();
+//     std::map<std::string, std::string>::iterator it_bi = it->second->serv_.cgi_map.begin();
+//     std::map<std::string, std::string>::iterator it_end = it->second->serv_.cgi_map.end();
 //     while (it_bi != it_end)
 //     {
 //         // std::cout << "first = " << it_bi->first << "\n";
@@ -66,12 +67,12 @@ void        cgi::cgi_work(int fd)
 //         it_bi++;
 //     }
 //     exit (21);
-//     std::map<std::string, std::string>::iterator b_conf = it->second.serv_.cgi_map.find(exten);
-//     std::map<std::string, std::string>::iterator b_uri = it->second.requst.extentions.find(exten);
+//     std::map<std::string, std::string>::iterator b_conf = it->second->serv_.cgi_map.find(exten);
+//     std::map<std::string, std::string>::iterator b_uri = it->second->requst.extentions.find(exten);
 
-//     if (b_uri != it->second.requst.extentions.end())
+//     if (b_uri != it->second->requst.extentions.end())
 //         cgi_stat = "static_file";
-//     if (b_conf != it->second.serv_.cgi_map.end())
+//     if (b_conf != it->second->serv_.cgi_map.end())
 //         cgi_stat = "cgi_state";
 //     // std::cout << "exten == " << exten << "\n";
 //     // std::cout << "cgi_stat == " << cgi_stat << "\n";
@@ -87,10 +88,10 @@ void    cgi::checkifcgi(request& rq, int& iscgi, int fd) {
         return ;
     }
     std::string file = std::string(it, path.end());
-    if (fd_maps[fd].requst.cgi_map.find(file.substr(file.find_last_of(".") + 1)) != fd_maps[fd].requst.cgi_map.end()) {
+    if (fd_maps[fd]->requst.cgi_map.find(file.substr(file.find_last_of(".") + 1)) != fd_maps[fd]->requst.cgi_map.end()) {
         iscgi = 1;
         stat_cgi = 1;
-        compiler = fd_maps[fd].requst.cgi_map[file.substr(file.find_last_of(".") + 1)];
+        compiler = fd_maps[fd]->requst.cgi_map[file.substr(file.find_last_of(".") + 1)];
         extension = file.substr(file.find_last_of(".") + 1);
     }
 }
@@ -98,9 +99,9 @@ void    cgi::checkifcgi(request& rq, int& iscgi, int fd) {
 char **cgi::fillCgiEnv(int fd) {
     std::vector<std::string> env_v;
     env_v.push_back("SCRIPT_NAME=" + compiler);
-    env_v.push_back("REQUEST_METHOD=" + fd_maps[fd].requst.method);
+    env_v.push_back("REQUEST_METHOD=" + fd_maps[fd]->requst.method);
     env_v.push_back("REDIRECT_STATUS=CGI");
-    env_v.push_back("PATH_TRANSLATED=" + fd_maps[fd].requst.uri);
+    env_v.push_back("PATH_TRANSLATED=" + fd_maps[fd]->requst.uri);
     env_v.push_back("QUERY_STRING=" + QUERY_STRING);
     char **env = new char*[env_v.size() + 1];
     for (std::vector<std::string>::iterator it = env_v.begin(); it != env_v.end(); it++) {
@@ -120,6 +121,8 @@ void    cgi::cgi_method(request& rq, int fd) {
     clientPid = fork();
     char **env = fillCgiEnv(fd);
     char **args = new char*[3];
+    garbage.push_back(args);
+    garbage.push_back(env);
     if (clientPid == 0) {
         freopen(file_out.c_str(), "w", stdout);
         freopen(file_out.c_str(), "w", stderr);

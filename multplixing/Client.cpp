@@ -2,7 +2,7 @@
 #include "../request.hpp"
 #include "../get_method.hpp"
 
-extern std::map<int, Client> fd_maps;
+extern std::map<int, Client *> fd_maps;
 
 Client::Client(std::string uri_)
 {
