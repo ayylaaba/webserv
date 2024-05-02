@@ -174,6 +174,20 @@ std::string get_name(std::string buffer)
     return name;
 }
 
+bool post::nameExistsInVector(std::vector<std::string> vec, std::string target)
+{
+    // bool is;
+    // std::vector<std::string>::iterator it = vec.begin();
+    // while (vec.begin() != vec.end())
+    // {
+    //     std::cout << *it << std::endl;
+    //     it++;
+    // }
+    // is = std::find(vec.begin(), vec.end(), target) != vec.end();
+    // std::cout << is << std::endl;
+    return std::find(vec.begin(), vec.end(), target) != vec.end();
+}
+
 std::string post::cat_header(std::string buffer)
 {
     return buffer.substr(buffer.find("\r\n\r\n") + 4);
@@ -183,6 +197,7 @@ int v = 0;
 std::string CType = "";
 std::string name = "";
 std::vector<std::string> vec;
+int suffix = 0;
 int len = 0;
 
 bool post::boundary(std::string buffer, std::string max_body_size, std::string upload_path)
@@ -192,6 +207,7 @@ Content-Disposition: form-data; name=""; filename="boundary.txt"
 Content-Type: text/plain \r\n\r\n*/
     concat += buffer;
     std::string file;
+    std::stringstream ss;
     while (1)
     {
         if (v == 0 && concat.find(sep) == 0)
@@ -200,10 +216,11 @@ Content-Type: text/plain \r\n\r\n*/
             {
                 CType = parse_boundary_header(concat.substr(0, concat.find("\r\n\r\n") + 4));
                 name = get_name(concat.substr(0, concat.find("\r\n\r\n") + 4));
+                std::cout << name << std::endl;
                 if (extension_founded(CType) && !name.empty())
                 {
-                    // std::cout << upload_path << std::endl;
-                    file = name + extension;
+                    file = name + generateUniqueSuffix() + extension;
+                    fileNames.push_back(upload_path + file);
                     outFile.open((upload_path + file).c_str());
                     vec.push_back(upload_path + file);
                     v = 1;
@@ -217,7 +234,8 @@ Content-Type: text/plain \r\n\r\n*/
                 }
                 else if (concat.substr(0, concat.find("\r\n\r\n") + 4).find("filename") == std::string::npos && !name.empty())
                 {
-                    file = name + ".txt";
+                    file = name + generateUniqueSuffix() + ".txt";
+                    fileNames.push_back(upload_path + file);
                     outFile.open((upload_path + file).c_str());
                     vec.push_back(upload_path + file);
                     v = 1;
@@ -231,7 +249,7 @@ Content-Type: text/plain \r\n\r\n*/
                 }
                 else if (concat.substr(0, concat.find("\r\n\r\n") + 4).find("filename") != std::string::npos && concat.substr(0, concat.find("\r\n\r\n") + 4).find("Content-Type") == std::string::npos && !name.empty())
                 {
-                    file = name + ".txt";
+                    file = name + generateUniqueSuffix() + ".txt";
                     outFile.open((upload_path + file).c_str());
                     vec.push_back(upload_path + file);
                     v = 1;

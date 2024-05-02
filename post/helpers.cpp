@@ -21,3 +21,14 @@ std::string post::generateUniqueFilename()
 
     return filename_stream.str();
 }
+
+std::string post::generateUniqueSuffix()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+
+    std::ostringstream filename_stream;
+    filename_stream << "_" << tv.tv_sec << "-" << tv.tv_usec;
+
+    return filename_stream.str();
+}
