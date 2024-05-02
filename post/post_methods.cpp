@@ -144,7 +144,7 @@ bool post::post_method(std::string buffer, int fd)
     if (transfer_encoding == "chunked")
         return chunked(buffer, it_->second.serv_.max_body, it_->second.requst.upload_path);
     else if (content_type == "multipart/form-data")
-        return boundary(buffer);
+        return boundary(buffer, it_->second.requst.upload_path);
     else
         return binary(buffer, it_->second.serv_.max_body, it_->second.requst.upload_path);
     return false;
@@ -171,7 +171,7 @@ int v = 0;
 std::string CType = "";
 std::vector<std::string> vec;
 
-bool post::boundary(std::string buffer)
+bool post::boundary(std::string buffer, std::string upload_path)
 {
 /* ----------------------------261896924513075486597166
 Content-Disposition: form-data; name=""; filename="boundary.txt"
@@ -190,9 +190,10 @@ Content-Type: text/plain \r\n\r\n*/
                 concat = cat_header(concat);
                 if (extension_founded(CType))
                 {
+                    // std::cout << upload_path << std::endl;
                     file = generateUniqueFilename() + extension;
-                    outFile.open(file.c_str());
-                    vec.push_back(file);
+                    outFile.open((upload_path + file).c_str());
+                    vec.push_back(upload_path + file);
                     v = 1;
                 }
                 else

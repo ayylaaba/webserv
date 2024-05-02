@@ -271,7 +271,7 @@ void        multplixing::lanch_server(server parse)
                 else if (events[i].events & EPOLLOUT && !it_fd->second.rd_done && it_fd->second.u_can_send) // must not always enter to here i think ask about it 
                 {
                     fd_maps[events[i].data.fd].istimeout = true;
-                    std::cout << "client " << events[i].data.fd << " is ready to send" << " \n";
+                    // std::cout << "client " << events[i].data.fd << " is ready to send" << " \n";
                     respo = 0;
                     if (!fd_maps[events[i].data.fd].requst.method.compare("GET")) {
                         respo = (*it_fd).second.get.get_mthod(events[i].data.fd);
