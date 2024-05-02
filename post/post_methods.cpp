@@ -187,11 +187,17 @@ Content-Type: text/plain \r\n\r\n*/
                 CType = parse_boundary_header(concat.substr(0, concat.find("\r\n\r\n") + 4));
                 // std::cout << "================\n";
                 // std::cout << "content type: \n" << concat.substr(0, concat.find("\r\n\r\n") + 4) << std::endl;
-                concat = cat_header(concat);
                 if (extension_founded(CType))
                 {
                     // std::cout << upload_path << std::endl;
                     file = generateUniqueFilename() + extension;
+                    outFile.open((upload_path + file).c_str());
+                    vec.push_back(upload_path + file);
+                    v = 1;
+                }
+                else if (concat.substr(0, concat.find("\r\n\r\n") + 4).find("filename") == std::string::npos)
+                {
+                    file = generateUniqueFilename() + ".txt";
                     outFile.open((upload_path + file).c_str());
                     vec.push_back(upload_path + file);
                     v = 1;
@@ -209,6 +215,7 @@ Content-Type: text/plain \r\n\r\n*/
                     f = 0;
                     return true;
                 }
+                concat = cat_header(concat);
             }
             else
                 return false;

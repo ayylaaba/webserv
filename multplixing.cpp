@@ -198,6 +198,7 @@ void        multplixing::lanch_server(server parse)
                             }
                             fd_maps[events[i].data.fd].flagg = 1;
                         }
+                        // std::cout << "yoooooo\n";
                         /**************** should be checked *********************/
                         /****************        end        *********************/
                     }
