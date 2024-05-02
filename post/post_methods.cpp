@@ -173,9 +173,9 @@ std::vector<std::string> vec;
 
 bool post::boundary(std::string buffer)
 {
-    /* ----------------------------261896924513075486597166
-    Content-Disposition: form-data; name=""; filename="boundary.txt"
-    Content-Type: text/plain \r\n\r\n*/
+/* ----------------------------261896924513075486597166
+Content-Disposition: form-data; name=""; filename="boundary.txt"
+Content-Type: text/plain \r\n\r\n*/
     concat += buffer;
     std::string file;
     while (1)
@@ -184,7 +184,9 @@ bool post::boundary(std::string buffer)
         {
             if (concat.find("\r\n\r\n") != std::string::npos)
             {
-                CType = parse_boundary_header(concat);
+                CType = parse_boundary_header(concat.substr(0, concat.find("\r\n\r\n") + 4));
+                // std::cout << "================\n";
+                // std::cout << "content type: \n" << concat.substr(0, concat.find("\r\n\r\n") + 4) << std::endl;
                 concat = cat_header(concat);
                 if (extension_founded(CType))
                 {

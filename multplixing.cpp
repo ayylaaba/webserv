@@ -164,10 +164,10 @@ void        multplixing::lanch_server(server parse)
                 else if (events[i].events & EPOLLIN)
                 {
                     fd_maps[events[i].data.fd].cgi_.stat_cgi = 0;
-                    std::cout << "client is reading :" << events[i].data.fd << " \n";
+                    // std::cout << "client is reading :" << events[i].data.fd << " \n";
                     buffer.resize(BUFFER_SIZE);
                     bytesRead = recv(events[i].data.fd , &buffer[0], BUFFER_SIZE, 0);
-                    std::cout << "client with an event : " << events[i].data.fd << " \n";
+                    // std::cout << "client with an event : " << events[i].data.fd << " \n";
                     if (bytesRead > 0)
                         buffer.resize(bytesRead);
                     if (bytesRead < 0)
