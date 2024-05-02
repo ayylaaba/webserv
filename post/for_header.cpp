@@ -58,10 +58,11 @@ int request::parseHost(std::string hst, int fd) {
         it3->second->resp.response_error("400", fd);
         multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
         isfdclosed = true;
+        return 1;
     }
     std::vector<server *>::iterator it2;
     std::cout << fd_maps[fd]->serv_.s.size() << std::endl;
-    exit(0);
+    // exit(0);
     for (it2 = fd_maps[fd]->serv_.s.begin(); it2 != fd_maps[fd]->serv_.s.end(); it2++) {
         if (!is_servername)
             break;
@@ -106,8 +107,10 @@ int request::parse_heade(std::string buffer, server &serv, int fd)
             content_type = line.substr(14);
         else if (line.substr(0, 17) == "Transfer-Encoding")
             transfer_encoding = line.substr(19);
-        else if (line.substr(0, 4) == "Host")
-            parseHost(line.substr(6), fd);
+        else if (line.substr(0, 4) == "Host") {
+            if (parseHost(line.substr(6), fd))
+                return 1;
+        }
         if (line == "\r")
             return 0;
     }

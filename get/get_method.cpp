@@ -121,6 +121,7 @@ int    get_method::get_mthod(int fd)
     
     if (check_path == 1)
     {
+        std::cout << "cgi state : " << fd_maps[fd]->cgi_.stat_cgi << std::endl;
         if (fd_maps[fd]->cgi_.stat_cgi) {
             time_t end = time(NULL);
             std::string cgi_file = fd_maps[fd]->cgi_.file_out; // 0000 update

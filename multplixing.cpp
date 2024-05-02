@@ -262,8 +262,15 @@ void        multplixing::lanch_server(server parse)
                     /****************        end        *********************/
                     fd_maps[events[i].data.fd]->u_can_send = 1;
                     //"CGI TESTING : '" << fd_maps[events[i].data.fd]->requst.stat_cgi << "'" << std::endl;
-                    fd_maps[events[i].data.fd]->cgi_.checkifcgi(rq, fd_maps[events[i].data.fd]->is_cgi, events[i].data.fd);
-                    if (!fd_maps[events[i].data.fd]->requst.stat_cgi.compare("on") && fd_maps[events[i].data.fd]->is_cgi && !check_cgi) {
+                    if (!fd_maps[events[i].data.fd]->requst.stat_cgi.compare("on"))
+                        fd_maps[events[i].data.fd]->cgi_.checkifcgi(rq, fd_maps[events[i].data.fd]->is_cgi, events[i].data.fd);
+                    else {
+                        if (fd_maps[events[i].data.fd]->resp.response_error("403", events[i].data.fd)) {
+                            if (close_fd(events[i].data.fd, epoll_fd))
+                                continue ;
+                        }
+                    }
+                    if (fd_maps[events[i].data.fd]->is_cgi && !check_cgi) {
                         
                         fd_maps[events[i].data.fd]->cgi_.cgi_method(rq, events[i].data.fd);
                         check_cgi = true;
