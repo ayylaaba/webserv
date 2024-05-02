@@ -1,6 +1,6 @@
 #include "../Client.hpp"
 
-extern std::map<int, Client>  fd_maps;
+extern std::map<int, Client *>  fd_maps;
 
 /*-- My Global variables --*/
 
@@ -88,10 +88,10 @@ std::string sep = "";
 
 bool post::post_method(std::string buffer, int fd)
 {
-    std::map<int, Client>::iterator   it_ = fd_maps.find(fd);
-    // std::cout << "Upload_path = " << it_->second.requst.upload_path << "\n";
-    // std::cout << "max_body = " << it_->second.serv_.max_body<< "\n";
-    // std::cout << "upload: " << it_->second.requst.upload_state << std::endl;
+    std::map<int, Client *>::iterator   it_ = fd_maps.find(fd);
+    // std::cout << "Upload_path = " << it_->second->requst.upload_path << "\n";
+    // std::cout << "max_body = " << it_->second->serv_.max_body<< "\n";
+    // std::cout << "upload: " << it_->second->requst.upload_state << std::endl;
     // std::cout << "====================\n";
     // std::cout << buffer << std::endl;
     // std::cout << "====================\n";
@@ -114,7 +114,7 @@ bool post::post_method(std::string buffer, int fd)
         if (extension_founded(content_type))
         {
             file = (generateUniqueFilename() + extension);
-            outFile.open((it_->second.requst.upload_path + file).c_str());
+            outFile.open((it_->second->requst.upload_path + file).c_str());
         }
         else if (content_type.substr(0, 19) != "multipart/form-data")
             return true;
@@ -144,11 +144,11 @@ bool post::post_method(std::string buffer, int fd)
         f = 1;
     }
     if (transfer_encoding == "chunked")
-        return chunked(buffer, it_->second.serv_.max_body, it_->second.requst.upload_path);
+        return chunked(buffer, it_->second->serv_.max_body, it_->second->requst.upload_path);
     else if (content_type == "multipart/form-data")
-        return boundary(buffer, it_->second.serv_.max_body, it_->second.requst.upload_path);
+        return boundary(buffer, it_->second->serv_.max_body, it_->second->requst.upload_path);
     else
-        return binary(buffer, it_->second.serv_.max_body, it_->second.requst.upload_path);
+        return binary(buffer, it_->second->serv_.max_body, it_->second->requst.upload_path);
     return false;
 }
 
