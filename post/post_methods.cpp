@@ -144,7 +144,7 @@ bool post::post_method(std::string buffer, int fd)
     if (transfer_encoding == "chunked")
         return chunked(buffer, it_->second.serv_.max_body, it_->second.requst.upload_path);
     else if (content_type == "multipart/form-data")
-        return boundary(buffer, it_->second.requst.upload_path);
+        return boundary(buffer, it_->second.serv_.max_body, it_->second.requst.upload_path);
     else
         return binary(buffer, it_->second.serv_.max_body, it_->second.requst.upload_path);
     return false;
@@ -170,8 +170,8 @@ std::string post::cat_header(std::string buffer)
 int v = 0;
 std::string CType = "";
 std::vector<std::string> vec;
-
-bool post::boundary(std::string buffer, std::string upload_path)
+int len = 0;
+bool post::boundary(std::string buffer, std::string max_body_size, std::string upload_path)
 {
 /* ----------------------------261896924513075486597166
 Content-Disposition: form-data; name=""; filename="boundary.txt"
@@ -203,6 +203,7 @@ Content-Type: text/plain \r\n\r\n*/
                     outFile.close();
                     vec.clear();
                     concat.clear();
+                    content_type.clear();
                     g = 2;
                     v = 0;
                     f = 0;
@@ -215,6 +216,7 @@ Content-Type: text/plain \r\n\r\n*/
         if (outFile.is_open() == true && (concat.find("\r\n" + sep) != std::string::npos))
         {
             outFile << concat.substr(0, concat.find("\r\n" + sep));
+            len += concat.substr(0, concat.find("\r\n" + sep)).length();
             outFile.close();
             concat = concat.substr(concat.find(sep));
             v = 0;
@@ -224,6 +226,20 @@ Content-Type: text/plain \r\n\r\n*/
             if (concat.length() > sep.length())
             {
                 outFile << concat.substr(0, concat.length() - sep.length());
+                len += concat.substr(0, concat.length() - sep.length()).length();
+                if (len > atoi(max_body_size.c_str()))
+                {
+                    for (size_t i = 0; i < vec.size(); i++)
+                        remove(vec.at(i).c_str());
+                    outFile.close();
+                    vec.clear();
+                    concat.clear();
+                    content_type.clear();
+                    f = 0; // header flag;
+                    v = 0;
+                    g = 3; // request flag;
+                    return true;
+                }
                 concat = concat.substr(concat.length() - sep.length());
             }
             return false;

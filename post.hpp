@@ -49,7 +49,7 @@ public:
     bool extension_founded(std::string contentType);
     void parse_hexa(std::string &remain);
     bool is_end_of_chunk(std::string max_body_size, std::string upload_path);
-    bool boundary(std::string buffer, std::string upload_path);
+    bool boundary(std::string buffer, std::string max_body_size, std::string upload_path);
     std::string parse_boundary_header(std::string buffer);
     std::string cat_header(std::string buffer);
     bool containsValidCharacters(const std::string& str);
