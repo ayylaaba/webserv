@@ -4,7 +4,7 @@
 
 std::map<int, std::vector<server*>::iterator> server_history;
 std::map<int, int> client_history;
-std::map<int, Client *>  fd_maps; 
+std::map<int, Client>  fd_maps; 
 
 int isIP(std::string host) {
     int dots = 0;
@@ -43,7 +43,7 @@ int request::parseHost(std::string hst, int fd) {
     std::string port;
     std::string incoming_port;
     std::string incoming_ip;
-    std::map<int, Client *>::iterator it3 = fd_maps.find(fd);
+    std::map<int, Client>::iterator it3 = fd_maps.find(fd);
     getServer(fd);
     incoming_port = (*it)->cont["listen"];
     incoming_ip = (*it)->cont["host"];
@@ -53,17 +53,14 @@ int request::parseHost(std::string hst, int fd) {
     checkifservername(ip, is_servername);
     port = hst.substr(hst.find(':') + 1);
     if ((server::check_ip(ip) || server::valid_range(port)) && !is_servername)
-        it3->second->resp.response_error("400", fd);
+        it3->second.resp.response_error("400", fd);
     if (port == "" || hst.find_first_of(':') == std::string::npos) {
-        it3->second->resp.response_error("400", fd);
-        multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
+        it3->second.resp.response_error("400", fd);
+        multplixing::close_fd(fd, fd_maps[fd].epoll_fd);
         isfdclosed = true;
-        return 1;
     }
     std::vector<server *>::iterator it2;
-    std::cout << fd_maps[fd]->serv_.s.size() << std::endl;
-    // exit(0);
-    for (it2 = fd_maps[fd]->serv_.s.begin(); it2 != fd_maps[fd]->serv_.s.end(); it2++) {
+    for (it2 = fd_maps[fd].serv_.s.begin(); it2 != fd_maps[fd].serv_.s.end(); it2++) {
         if (!is_servername)
             break;
         if ((*it2)->cont["listen"] == incoming_port && (*it2)->cont["server_name"] == hst) {
@@ -71,7 +68,7 @@ int request::parseHost(std::string hst, int fd) {
             return (0);
         }
     }
-    for (it2 = fd_maps[fd]->serv_.s.begin(); it2 != fd_maps[fd]->serv_.s.end(); it2++) {
+    for (it2 = fd_maps[fd].serv_.s.begin(); it2 != fd_maps[fd].serv_.s.end(); it2++) {
         if ((*it2)->cont["listen"] == incoming_port && (*it2)->cont["host"] == incoming_ip) {
             it = it2;
             return (0);
@@ -91,9 +88,9 @@ int request::parse_heade(std::string buffer, server &serv, int fd)
     method = vec[0];
     path   = vec[1];
     if (buffer.find("Host") == std::string::npos) {
-        if (fd_maps[fd]->resp.response_error("400", fd)) {
+        if (fd_maps[fd].resp.response_error("400", fd)) {
             std::cout << "22222222222222222222\n";
-            if (multplixing::close_fd(fd, fd_maps[fd]->epoll_fd))
+            if (multplixing::close_fd(fd, fd_maps[fd].epoll_fd))
                 return 1;
         }
     }
@@ -107,10 +104,8 @@ int request::parse_heade(std::string buffer, server &serv, int fd)
             content_type = line.substr(14);
         else if (line.substr(0, 17) == "Transfer-Encoding")
             transfer_encoding = line.substr(19);
-        else if (line.substr(0, 4) == "Host") {
-            if (parseHost(line.substr(6), fd))
-                return 1;
-        }
+        else if (line.substr(0, 4) == "Host")
+            parseHost(line.substr(6), fd);
         if (line == "\r")
             return 0;
     }
