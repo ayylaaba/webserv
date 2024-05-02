@@ -101,16 +101,14 @@ bool post::post_method(std::string buffer, int fd)
         parse_header(buffer);
         if (content_type.empty() || (content_length.empty() && transfer_encoding != "chunked"))
         {
-            std::cout << "content type is empty " << content_type << std::endl;
+            // std::cout << "content type is empty " << content_type << std::endl;
             g = 1;
-            buffer.clear();
             return true;
         }
         if (!extension_founded(content_type) && content_type.substr(0, 19) != "multipart/form-data")
         {
-            std::cout << "content type: " << content_type << std::endl;
+            // std::cout << "content type: " << content_type << std::endl;
             g = 2;
-            buffer.clear();
             return true;
         }
         if (extension_founded(content_type))
@@ -119,9 +117,13 @@ bool post::post_method(std::string buffer, int fd)
             outFile.open((it_->second.requst.upload_path + file).c_str());
         }
         else if (content_type.substr(0, 19) != "multipart/form-data")
-
             return true;
         buffer = buffer.substr(buffer.find("\r\n\r\n") + 4);
+        if (transfer_encoding == "chunked" && content_type.substr(0, 19) == "multipart/form-data")
+        {
+            g = 2;
+            return true;
+        }
         if (transfer_encoding == "chunked")
         {
             chunked_len = 0;
@@ -129,7 +131,7 @@ bool post::post_method(std::string buffer, int fd)
         }
         else if (transfer_encoding != "chunked" && g == 10)
         {
-            std::cout << "$$$" << transfer_encoding << "$$$" << std::endl;
+            // std::cout << "$$$" << transfer_encoding << "$$$" << std::endl;
             g = 1;
             buffer.clear();
             return true;
@@ -176,15 +178,6 @@ std::string get_name(std::string buffer)
 
 bool post::nameExistsInVector(std::vector<std::string> vec, std::string target)
 {
-    // bool is;
-    // std::vector<std::string>::iterator it = vec.begin();
-    // while (vec.begin() != vec.end())
-    // {
-    //     std::cout << *it << std::endl;
-    //     it++;
-    // }
-    // is = std::find(vec.begin(), vec.end(), target) != vec.end();
-    // std::cout << is << std::endl;
     return std::find(vec.begin(), vec.end(), target) != vec.end();
 }
 
@@ -216,11 +209,9 @@ Content-Type: text/plain \r\n\r\n*/
             {
                 CType = parse_boundary_header(concat.substr(0, concat.find("\r\n\r\n") + 4));
                 name = get_name(concat.substr(0, concat.find("\r\n\r\n") + 4));
-                std::cout << name << std::endl;
                 if (extension_founded(CType) && !name.empty())
                 {
                     file = name + generateUniqueSuffix() + extension;
-                    fileNames.push_back(upload_path + file);
                     outFile.open((upload_path + file).c_str());
                     vec.push_back(upload_path + file);
                     v = 1;
@@ -235,7 +226,6 @@ Content-Type: text/plain \r\n\r\n*/
                 else if (concat.substr(0, concat.find("\r\n\r\n") + 4).find("filename") == std::string::npos && !name.empty())
                 {
                     file = name + generateUniqueSuffix() + ".txt";
-                    fileNames.push_back(upload_path + file);
                     outFile.open((upload_path + file).c_str());
                     vec.push_back(upload_path + file);
                     v = 1;
