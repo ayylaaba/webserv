@@ -52,6 +52,7 @@ bool post::is_end_of_chunk(std::string max_body_size, std::string upload_path)
         outFile.close();
         outFile.clear();
         concat.clear();
+        content_type.clear();
         f = 0;
         if (chunked_len > atoi(max_body_size.c_str()))
         {
@@ -177,7 +178,7 @@ bool post::boundary(std::string buffer)
     Content-Type: text/plain \r\n\r\n*/
     concat += buffer;
     std::string file;
-    while(1)
+    while (1)
     {
         if (v == 0 && concat.find(sep) == 0)
         {
@@ -208,7 +209,7 @@ bool post::boundary(std::string buffer)
             else
                 return false;
         }
-        if(outFile.is_open() == true && (concat.find("\r\n" + sep) != std::string::npos)) 
+        if (outFile.is_open() == true && (concat.find("\r\n" + sep) != std::string::npos))
         {
             outFile << concat.substr(0, concat.find("\r\n" + sep));
             outFile.close();
@@ -229,6 +230,8 @@ bool post::boundary(std::string buffer)
             std::cout << "done1.\n";
             concat.clear();
             outFile.close();
+            CType.clear();
+            vec.clear();
             v = 0;
             f = 0;
             return true;
