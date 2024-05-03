@@ -115,10 +115,16 @@ bool post::post_method(std::string buffer, int fd)
         if (extension_founded(content_type))
         {
             if (it_->second.is_cgi)
+            {
                 file = generateCgiName() + extension;
+                outFile.open(("/tmp/" + file).c_str());
+            }
             else
+            {
                 file = generateUniqueFilename() + extension;
-            outFile.open((it_->second.requst.upload_path + file).c_str());
+                outFile.open((it_->second.requst.upload_path + file).c_str());
+                std::cout << it_->second.requst.upload_path << std::endl;
+            }
         }
         else if (content_type.substr(0, 19) != "multipart/form-data")
             return true;
