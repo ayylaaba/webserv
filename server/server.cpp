@@ -22,7 +22,6 @@ server::server(std::map<std::string, std::string> &cont_s, std::vector<location*
     cont = cont_s;
     l = l_;
     vec_of_locations = vec_of_locations_;
-    max_body = "2147483647";
 }
 
 std::string     server::strtrim(std::string &str)
@@ -90,12 +89,45 @@ void        server::check_duplicate_location(std::vector<std::string> s)
     }
 }
 
+void        server::check_coment(const char* file_)
+{
+    std::string str;
+    std::ifstream new_red(file_);
+
+    while (std::getline(new_red, str))
+    {
+        if (str[0] != '#')
+            return ;
+    }
+    if (new_red.eof())
+        print_err("Empty File");
+}
+
+void        server::check_empty(const char* file_)
+{
+    std::ifstream new_red(file_);
+
+    // read a character
+    char c;
+    std::string str;
+    new_red.read(&c, 1);
+    if (new_red.eof())
+        print_err("Empty File");
+    while (std::getline(new_red, str))
+    {
+        if (str[0] != '#' && !isWhitespace(str))
+            return ;
+    }
+    if (new_red.eof())
+        print_err("Empty File");
+}
 void        server::mange_file(const char* file)
 {
     std::ifstream   rd_content(file);
     s_token = 0;
     obj.l_token = 0;
-
+    check_empty(file);
+    check_coment(file);
     while (std::getline(rd_content, str)) // loop to get lines
     {
         str = strtrim(str);
@@ -406,10 +438,7 @@ void      server::handl_serv(std::vector<std::string> s)
             print_err("syntaxt_error on ip");
     }
     else if (!s[0].compare("client_max_body_size"))
-    {
         max_body = s[1];
-        std::cout << "0--0 max_body = " << max_body << std::endl; // add another argement in server constroctor0000
-    }
 }
 
 int      server::check_ip_nbr(std::string nbr)

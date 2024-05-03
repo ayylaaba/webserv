@@ -55,7 +55,6 @@ public:
     std::string cat_header(std::string buffer);
     bool containsValidCharacters(const std::string& str);
     std::string generateUniqueSuffix();
-    std::string generateCgiName();
 };
 
 

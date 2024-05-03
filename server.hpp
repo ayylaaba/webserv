@@ -52,6 +52,8 @@ class server : public location
         std::vector<std::string>            vec_of_locations;
         std::vector<std::string>            p_s_id;
 
+        void                                check_coment(const char* file_);
+        void                                check_empty(const char* rd_content);
         std::string                         controle_slash(std::string direc);
         void                                check_duplicate_location(std::vector<std::string> s);
         void                                check_server_deplicate();

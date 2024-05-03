@@ -48,7 +48,6 @@ class Client
         time_t                              start_time;
         int                                 flagg;
         bool                                istimeout;
-        std::string                         buf;
         Client(std::string uri_);
         Client(const Client& copy);
         std::map<std::string, std::string>  message_response_stat();
