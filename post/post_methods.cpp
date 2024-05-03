@@ -89,8 +89,7 @@ std::string sep = "";
 bool post::post_method(std::string buffer, int fd)
 {
     std::map<int, Client>::iterator   it_ = fd_maps.find(fd);
-    it_->second.is_cgi = 1;
-    std::cout << it_->second.is_cgi << std::endl;
+    std::cout << "is cgi: =>" << it_->second.is_cgi << std::endl;
     // std::cout << "Upload_path = " << it_->second.requst.upload_path << "\n";
     // std::cout << "max_body = '" << (*fd_maps[fd].requst.it)->max_body << "'\n";
     // std::cout << "upload: " << it_->second.requst.upload_state << std::endl;
