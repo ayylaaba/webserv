@@ -43,7 +43,7 @@ int request::parseHost(std::string hst, int fd) {
     std::string port;
     std::string incoming_port;
     std::string incoming_ip;
-    std::map<int, Client *>::iterator it3 = fd_maps.find(fd);
+    std::map<int, Client*>::iterator it3 = fd_maps.find(fd);
     getServer(fd);
     incoming_port = (*it)->cont["listen"];
     incoming_ip = (*it)->cont["host"];
@@ -59,16 +59,15 @@ int request::parseHost(std::string hst, int fd) {
         multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
         isfdclosed = true;
     }
-    std::vector<server *>::iterator it2;
-    std::cout << fd_maps[fd]->serv_.s.size() << std::endl;
-    exit(0);
-    for (it2 = fd_maps[fd]->serv_.s.begin(); it2 != fd_maps[fd]->serv_.s.end(); it2++) {
+    std::vector<server *>::iterator it2 = fd_maps[fd]->serv_.s.begin();
+    while (it2 != fd_maps[fd]->serv_.s.end()) {
         if (!is_servername)
             break;
         if ((*it2)->cont["listen"] == incoming_port && (*it2)->cont["server_name"] == hst) {
             it = it2;
             return (0);
         }
+        it2++;
     }
     for (it2 = fd_maps[fd]->serv_.s.begin(); it2 != fd_maps[fd]->serv_.s.end(); it2++) {
         if ((*it2)->cont["listen"] == incoming_port && (*it2)->cont["host"] == incoming_ip) {
@@ -108,6 +107,8 @@ int request::parse_heade(std::string buffer, server &serv, int fd)
             transfer_encoding = line.substr(19);
         else if (line.substr(0, 4) == "Host")
             parseHost(line.substr(6), fd);
+        else if (line.substr(0, 6) == "Cookie")
+            fd_maps[fd]->cgi_.HTTP_COOKIE = line.substr(8);
         if (line == "\r")
             return 0;
     }

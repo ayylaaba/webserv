@@ -2,7 +2,7 @@
 #include "../request.hpp"
 #include "../get_method.hpp"
 
-extern std::map<int, Client> fd_maps;
+extern std::map<int, Client *> fd_maps;
 
 Client::Client(std::string uri_)
 {
@@ -45,6 +45,8 @@ Client::~Client()
     // std::cout<<"================CLIENT dESTOR================\n";
     kill(cgi_.clientPid, 9);
     waitpid(cgi_.clientPid, NULL, 0);
+    //print with bold red the value of cgi_.file_out
+    std::cout << "\033[1;31m" << "file_out = " << cgi_.file_out << "\033[0m" << std::endl;
     unlink(cgi_.file_out.c_str());
 }
 
