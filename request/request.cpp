@@ -1,7 +1,7 @@
 #include "../request.hpp"
 #include "../Client.hpp"
 #define MAX_PATH = 1000;
-extern std::map<int, Client *> fd_maps;
+extern std::map<int, Client> fd_maps;
 extern int query;
 
 
@@ -63,7 +63,7 @@ int    checkcgi(request& rq, int& iscgi, int fd) {
         query = rq.uri.substr(rq.uri.find("?"));
         rq.uri = rq.uri.substr(0, rq.uri.find("?"));
         query = query.substr(query.find_last_of('?') + 1);
-        fd_maps[fd]->cgi_.QUERY_STRING = query;
+        fd_maps[fd].cgi_.QUERY_STRING = query;
     }
     std::string path = rq.uri;
     std::string::iterator it = path.begin() + path.find_last_of("/") + 1;
@@ -72,7 +72,7 @@ int    checkcgi(request& rq, int& iscgi, int fd) {
         return 0;
     }
     std::string file = std::string(it, path.end());
-    if (fd_maps[fd]->requst.cgi_map.find(file.substr(file.find_last_of(".") + 1)) != fd_maps[fd]->requst.cgi_map.end()) {
+    if (fd_maps[fd].requst.cgi_map.find(file.substr(file.find_last_of(".") + 1)) != fd_maps[fd].requst.cgi_map.end()) {
         iscgi = 1;
         return 1;
     }
@@ -105,7 +105,7 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
 {
     if (parse_heade(rq, server, fd) == 1)
         return 1;
-    std::map<int, Client *>::iterator it = fd_maps.find(fd);
+    std::map<int, Client>::iterator it = fd_maps.find(fd);
     int             state;
 
     last          = rq.find("\r\n");
@@ -115,65 +115,65 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     http_version  = vec[2];
     if (http_version.compare("HTTP/1.1"))
     {
-        state = it->second->resp.response_error("505", fd);    
-        it->second->not_allow_method = 1;
+        state = it->second.resp.response_error("505", fd);    
+        it->second.not_allow_method = 1;
         return 0;
     } 
-    it->second->resp.response_message = server.response_message;
+    it->second.resp.response_message = server.response_message;
     if (path == "/favicon.ico")
     {
-        state = it->second->resp.response_error("202", fd);
-        it->second->not_allow_method = 1;
+        state = it->second.resp.response_error("202", fd);
+        it->second.not_allow_method = 1;
         return 0;
     }
     /********************* edited by mhassani *****************/
     // std::cout << "uri: " << uri << std::endl;
     /********************* end **********************/
-    std::cout << "is cgi: " << fd_maps[fd]->is_cgi << std::endl;
-    std::cout << "URI = " << it->second->requst.uri << std::endl;
-    uri = get_full_uri(server, *it->second);
-    checkcgi(*this, fd_maps[fd]->is_cgi, fd);
+    std::cout << "is cgi: " << fd_maps[fd].is_cgi << std::endl;
+    std::cout << "URI = " << it->second.requst.uri << std::endl;
+    uri = get_full_uri(server, it->second);
+    checkcgi(*this, fd_maps[fd].is_cgi, fd);
     if (access(uri.c_str(), F_OK) < 0)
         uri = hex_to_ascii(uri);
     std::cout << "\033[1;31m" << "uri: " << uri << "\033[0m" << std::endl;
-    x = it->second->get.check_exist(uri);
+    x = it->second.get.check_exist(uri);
     if (redirection_stat == 1) // 0000
     {
-        std::string msg = "HTTP/1.1 301 Moved Permanently\r\nlocation: " + it->second->redirec_path + "\r\n\r\n";
+        std::string msg = "HTTP/1.1 301 Moved Permanently\r\nlocation: " + it->second.redirec_path + "\r\n\r\n";
         write(fd, msg.c_str(), msg.length());
-        it->second->not_allow_method = 1;
+        it->second.not_allow_method = 1;
         return 0;
     }
     if (vec.size() != 3 || last == std::string::npos)
     {
-        state = it->second->resp.response_error("400", fd);    
-        it->second->not_allow_method = 1;
+        state = it->second.resp.response_error("400", fd);    
+        it->second.not_allow_method = 1;
         return 0;        
     }
     if (check_path_access(uri))
     {
-        state = it->second->resp.response_error("403", fd);    
-        it->second->not_allow_method = 1;
+        state = it->second.resp.response_error("403", fd);    
+        it->second.not_allow_method = 1;
         return 0;        
     }
     if ((method.compare("DELETE") && method.compare("POST") && method.compare("GET")) || !method_state)
     {
         if ((method.compare("DELETE") && method.compare("POST") && method.compare("GET")))
         {
-            state = it->second->resp.response_error("501", fd);
-            it->second->not_allow_method = 1;
+            state = it->second.resp.response_error("501", fd);
+            it->second.not_allow_method = 1;
             return 0;
         }
         if (!method_state && !k){
-            state = it->second->resp.response_error("405", fd);
-            it->second->not_allow_method = 1;
+            state = it->second.resp.response_error("405", fd);
+            it->second.not_allow_method = 1;
             return 0;
         }
     }
     if (!get_exten_type(uri).compare("Unsupported"))
     {
-        state = it->second->resp.response_error("415", fd);
-        it->second->not_allow_method = 1;
+        state = it->second.resp.response_error("415", fd);
+        it->second.not_allow_method = 1;
         return 0;
     }
     (void)state;

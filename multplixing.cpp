@@ -137,6 +137,7 @@ void        multplixing::lanch_server(server parse)
                 }
                 fd_maps[client_socket]            = Client();
                 fd_maps[client_socket].serv_      = parse;
+                std::cout << "fff " <<  fd_maps[client_socket].serv_.max_body << std::endl;
                 client_history[client_socket]     = *it;
                 fd_maps[client_socket].cgi_       = cgi_;
                 fd_maps[client_socket].epoll_fd   = epoll_fd;
@@ -214,7 +215,15 @@ void        multplixing::lanch_server(server parse)
                     if (rq.method == "POST" && fd_maps[events[i].data.fd].flagg == 1 && !it_fd->second.not_allow_method)
                     {
                         /****************** edited by mhassani ********************/
-                        if (fd_maps[events[i].data.fd].requst.upload_state != "on")
+                        if (fd_maps[events[i].data.fd].is_cgi)
+                        {
+                            if (fd_maps[events[i].data.fd].post_.post_method(buffer, events[i].data.fd)  && !it_fd->second.not_allow_method)
+                            {
+                                fd_maps[events[i].data.fd].post_.j = 1;
+                                fd_maps[events[i].data.fd].flagg = 0;
+                            }
+                        }
+                        if (fd_maps[events[i].data.fd].requst.upload_state != "on" && !fd_maps[events[i].data.fd].is_cgi)
                         {
                             if (it_fd->second.resp.response_error("403", events[i].data.fd))
                             {
@@ -224,7 +233,7 @@ void        multplixing::lanch_server(server parse)
                             }
                         }
                         /********************** end ********************/
-                        if (fd_maps[events[i].data.fd].post_.post_method(buffer, events[i].data.fd)  && !it_fd->second.not_allow_method)
+                        if (fd_maps[events[i].data.fd].post_.post_method(buffer, events[i].data.fd)  && !it_fd->second.not_allow_method && !fd_maps[events[i].data.fd].is_cgi)
                         {
                             fd_maps[events[i].data.fd].post_.j = 1;
                             fd_maps[events[i].data.fd].flagg = 0;
@@ -257,6 +266,18 @@ void        multplixing::lanch_server(server parse)
                             //"413 error message\n";
                             // //"g value is: " << fd_maps[events[i].data.fd].post_.g << std::endl;
                             if (it_fd->second.resp.response_error("413", events[i].data.fd))
+                            {
+                                //"enter to 413\n";
+                                fd_maps[events[i].data.fd].post_.g = 0;
+                                if (close_fd(events[i].data.fd, epoll_fd))
+                                    continue ;
+                            }
+                        }
+                        else if (fd_maps[events[i].data.fd].post_.g == 4)
+                        {
+                            //"413 error message\n";
+                            // //"g value is: " << fd_maps[events[i].data.fd].post_.g << std::endl;
+                            if (it_fd->second.resp.response_error("501", events[i].data.fd))
                             {
                                 //"enter to 413\n";
                                 fd_maps[events[i].data.fd].post_.g = 0;

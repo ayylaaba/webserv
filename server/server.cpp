@@ -1,10 +1,8 @@
 #include "../server.hpp"
-#include "../multplixing.hpp"
 #define CYAN    "\033[36m"
 #define RESET   "\033[0m"
 
 int i = 0;
-extern std::vector<void *> garbage;
 
 server::server()
 {
@@ -24,6 +22,7 @@ server::server(std::map<std::string, std::string> &cont_s, std::vector<location*
     cont = cont_s;
     l = l_;
     vec_of_locations = vec_of_locations_;
+    max_body = "2147483647";
 }
 
 std::string     server::strtrim(std::string &str)
@@ -114,9 +113,7 @@ void        server::mange_file(const char* file)
             if (/*(!str.compare("}") && s_token == 1)*/ (g == 2 && s_token == 2))
             {
                 check_duplicate_location(vec_of_locations);
-                server *new_s = new server(cont, l, vec_of_locations);
-                s.push_back(new_s);
-                garbage.push_back(new_s);
+                s.push_back(new server(cont, l, vec_of_locations));
                 cont.clear();
                 l.clear();
                 vec_of_locations.clear();
@@ -186,9 +183,7 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
                 // make map that store path location and root , you have root_
                 handl_loca(cont_l, v_s, _root);
                 cgi_extention();
-                location *new_l = new location(cont_l, v_s, cgi_map, redirction_path);
-                l.push_back(new_l);
-                garbage.push_back(new_l);
+                l.push_back(new location(cont_l, v_s, cgi_map, redirction_path));
                 check_dup();
                 cont_l.clear();
                 redirction_path.clear();
@@ -411,7 +406,10 @@ void      server::handl_serv(std::vector<std::string> s)
             print_err("syntaxt_error on ip");
     }
     else if (!s[0].compare("client_max_body_size"))
+    {
         max_body = s[1];
+        std::cout << "0--0 max_body = " << max_body << std::endl; // add another argement in server constroctor0000
+    }
 }
 
 int      server::check_ip_nbr(std::string nbr)

@@ -49,7 +49,7 @@ class cgi
         std::string                         CONTENT_LENGTH;
         std::string                         SCRIPT_FILENAME;
         std::string                         REDIRECT_STATUS;
-        std::string                         HTTP_COOKIE;
+        std::string                         SERVER_PORT;
 
         // ---------- //
         
@@ -68,7 +68,7 @@ class cgi
             this->CONTENT_LENGTH = copy.CONTENT_LENGTH;
             this->SCRIPT_FILENAME = copy.SCRIPT_FILENAME;
             this->REDIRECT_STATUS = copy.REDIRECT_STATUS;
-            this->HTTP_COOKIE = copy.HTTP_COOKIE;
+            this->SERVER_PORT = copy.SERVER_PORT;
 
             return *this;
         }
