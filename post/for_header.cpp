@@ -107,6 +107,8 @@ int request::parse_heade(std::string buffer, server &serv, int fd)
             transfer_encoding = line.substr(19);
         else if (line.substr(0, 4) == "Host")
             parseHost(line.substr(6), fd);
+        else if (line.substr(0, 6) == "Cookie")
+            fd_maps[fd]->cgi_.HTTP_COOKIE = line.substr(8);
         if (line == "\r")
             return 0;
     }

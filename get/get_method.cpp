@@ -5,6 +5,7 @@
 
 int checkcontent = 0;
 extern std::map<int, Client *> fd_maps;
+std::string cookie = "";
 
 get_method::get_method(){
 }
@@ -20,7 +21,9 @@ std::string parsephpheader(std::string buffer)
         if (line.substr(0, 12) == "Content-Type") {
             contenttype = line.substr(14);
             check = 1;
-            break ;
+        }
+        else if (line.substr(0, 10) == "Set-Cookie") {
+            cookie = line.substr(12);
         }
     }
     if (!check)
@@ -41,7 +44,7 @@ std::string getContent (std::string file, int fd, std::string& contenttype) {
     if (fd_maps[fd]->cgi_.extension == "php" && !fd_maps[fd]->cgi_.is_error) {
         size_t pos = content.find("\r\n\r\n");
         contenttype = parsephpheader(content.substr(0, pos));
-        // std::cout << contenttype << std::endl;
+        std::cout << contenttype << std::endl;
         if (pos != std::string::npos) {
             content = content.substr(pos + 4);
             return content;
@@ -60,9 +63,9 @@ std::string getErrorPage(int fd, std::string stat, std::string& status, std::str
     else if (stat == "504")
         status = "504 Gateway Timeout";
     if (fd_maps[fd]->serv_.err_page.find(stat) != fd_maps[fd]->serv_.err_page.end()) {
-        // std::cout << "\033[1;32m test:::: " << stat  << " | '" << fd_maps[fd]->serv_.err_page[stat] << "'\033[0m" << std::endl;
+        std::cout << "\033[1;32m test:::: " << stat  << " | '" << fd_maps[fd]->serv_.err_page[stat] << "'\033[0m" << std::endl;
         contenttype = fd_maps[fd]->requst.extentions[fd_maps[fd]->serv_.err_page[stat].substr(fd_maps[fd]->serv_.err_page[stat].find_last_of(".") + 1)];
-        // std::cout << "contenttype: " << contenttype << std::endl;
+        std::cout << "contenttype: " << contenttype << std::endl;
         return getContent(fd_maps[fd]->serv_.err_page[stat], fd, contenttype);
     }
     else {
@@ -85,6 +88,8 @@ void cgi::sendResponse(int fd, std::string& response, std::string stat, std::str
     iss << response.length();
     std::string responseLength = iss.str();
     std::string httpResponse = "HTTP/1.1 " + status + "\r\n";
+    if (cookie != "")
+        httpResponse += "Set-Cookie: " + cookie + "\r\n";
     httpResponse += "Content-Type: " + contenttype + "\r\n";
     httpResponse += "Content-Length: " + responseLength + "\r\n";
     httpResponse += "\r\n";
@@ -100,7 +105,7 @@ void cgi::sendResponse(int fd, std::string& response, std::string stat, std::str
 
 int    get_method::get_mthod(int fd)
 {
-    std::map<int, Client*>::iterator it = fd_maps.find(fd);
+    std::map<int, Client *>::iterator it = fd_maps.find(fd);
     std::string         response;
     std::string         extention_type;
     std::stringstream   StringSize;
@@ -118,7 +123,16 @@ int    get_method::get_mthod(int fd)
     fileSize = get_fileLenth(it->second->requst.uri); // get full lenth of the file
     extention_type = it->second->requst.get_exten_type(it->second->requst.uri);
     StringSize << fileSize;
-    
+
+    if (check_path  == 2 && it->second->requst.redirct_loca)
+    {
+        if (it->second->requst.path[it->second->requst.path.length() -1] != '/')
+        {
+            err_stat = it->second->resp.response_error("301", fd);
+            if (err_stat)
+                return 1;
+        }
+    }
     if (check_path == 1)
     {
         if (fd_maps[fd]->cgi_.stat_cgi) {
@@ -147,7 +161,9 @@ int    get_method::get_mthod(int fd)
             else if (end - fd_maps[fd]->cgi_.start_time > 7) {
                 fd_maps[fd]->cgi_.is_error = 1;
                 std::string timeout = "GATEWAY TIMEOUT";
-                // std::cout << "\033[1;34m" << fd_maps[fd]->cgi_.clientPid << "\033[0m" << std::endl;
+                std::cout << "\033[1;34m" << fd_maps[fd]->cgi_.clientPid << "\033[0m" << std::endl;
+                kill(fd_maps[fd]->cgi_.clientPid, 9);
+                waitpid(fd_maps[fd]->cgi_.clientPid, NULL, 0);
                 cgi::sendResponse(fd, timeout, "504", contenttype);
                 isfdclosed = true;
                 return 1;
@@ -195,13 +211,13 @@ int    get_method::get_mthod(int fd)
         {
             response = it->second->resp.get_header("200", "text/html", size.str(), *it->second);
             send(fd, response.c_str(), response.size(), 0);
-            fd_maps[fd]->istimeout = false;
+            // fd_maps[fd]->istimeout = false;
             it->second->res_header = 1;
         }
         else if (it->second->res_header)
         { 
             send(fd, buff_s.c_str(), buff_s.size(), 0);
-            fd_maps[fd]->istimeout = false;
+            // fd_maps[fd]->istimeout = false;
             it->second->rd_done = 1;
             return 1;
         }

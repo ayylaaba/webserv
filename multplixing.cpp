@@ -29,14 +29,10 @@ in_addr_t multplixing::convertIpv4toBinary(const std::string& ip) {
 
 int        multplixing::close_fd(int fd, int epll)
 {
-    //"Client " << fd << " Was Removed From Map\n";
-    //"it is Done\n";
-
     epoll_ctl(epll, EPOLL_CTL_DEL, fd , NULL);
     fd_maps.erase(fd_maps.find(fd));
-    //"THE VALUE OF FD:" << fd << std::endl;
+    delete fd_maps[fd];
     close(fd);
-    // exit(120);
     return 1;
 }
 
