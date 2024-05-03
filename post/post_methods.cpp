@@ -89,6 +89,7 @@ std::string sep = "";
 bool post::post_method(std::string buffer, int fd)
 {
     std::map<int, Client>::iterator   it_ = fd_maps.find(fd);
+    it_->second.is_cgi = 1;
     std::cout << it_->second.is_cgi << std::endl;
     // std::cout << "Upload_path = " << it_->second.requst.upload_path << "\n";
     // std::cout << "max_body = '" << (*fd_maps[fd].requst.it)->max_body << "'\n";
@@ -116,8 +117,8 @@ bool post::post_method(std::string buffer, int fd)
         {
             if (it_->second.is_cgi)
             {
-                file = generateCgiName() + extension;
-                outFile.open(("/tmp/" + file).c_str());
+                std::cout << "here\n";
+                outFile.open(("/tmp/" + generateCgiName()).c_str());
             }
             else
             {
@@ -125,6 +126,11 @@ bool post::post_method(std::string buffer, int fd)
                 outFile.open((it_->second.requst.upload_path + file).c_str());
                 std::cout << it_->second.requst.upload_path << std::endl;
             }
+        }
+        else if (it_->second.is_cgi && content_type.substr(0, 19) == "multipart/form-data")
+        {
+            std::cout << "boundary CGI.\n";
+            outFile.open(("/tmp/" + generateCgiName()).c_str());
         }
         else if (content_type.substr(0, 19) != "multipart/form-data")
             return true;
@@ -354,6 +360,7 @@ bool post::chunked(std::string buffer, std::string max_body_size, std::string up
 
 bool post::binary(std::string buffer, std::string max_body_size, std::string upload_path)
 {
+    std::cout << buffer << std::endl;
     if (outFile.is_open())
     {
         outFile << buffer;
