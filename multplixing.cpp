@@ -120,11 +120,7 @@ void        multplixing::lanch_server(server parse)
         for (int i = 0; i < num; i++) {
             check_cgi = false;
             isfdclosed = false;
-            // flag = 0;
-            // std::cout << "client is alive : " << events[i].data.fd << std::endl;
             if ((it = std::find(serverSocket.begin(), serverSocket.end(), events[i].data.fd)) != serverSocket.end()) {
-                //"BEFORE CLIENT FD VALUE :" << events[i].data.fd << std::endl;
-                //"New Client Connected\n";
                 int client_socket = accept(*it, NULL, NULL);
                 struct epoll_event envts_client;
                 envts_client.data.fd = client_socket;
@@ -144,22 +140,20 @@ void        multplixing::lanch_server(server parse)
                 fd_maps[client_socket]->start_time = time(NULL);
                 fd_maps[client_socket]->flagg      = 0;
                 fd_maps[client_socket]->istimeout  = false;
-                //"AFTER CLIENT FD VALUE :" << events[i].data.fd << std::endl;
-                //"Client " << client_socket << " Added To Map\n";
             }
             else {
                 end = time(NULL);
                 std::map<int, Client *>::iterator it_fd = fd_maps.find(events[i].data.fd);
-                //"Client with an event :" << events[i].data.fd << std::endl;
                 if (events[i].events & EPOLLRDHUP || events[i].events & EPOLLERR  || events[i].events & EPOLLHUP) 
                 {
                     if (close_fd( events[i].data.fd, epoll_fd ))
                         continue ;
                 }
-                if ((difftime(end, fd_maps[events[i].data.fd]->start_time) > MAX_TIME) && !fd_maps[events[i].data.fd]->istimeout) {
-                    fd_maps[events[i].data.fd]->resp.response_error("408", events[i].data.fd);
-                    close_fd(events[i].data.fd, epoll_fd);   
-                    continue;
+                if ((difftime(end, fd_maps[events[i].data.fd]->start_time) > MAX_TIME) && fd_maps[events[i].data.fd]->istimeout) {
+                    if (fd_maps[events[i].data.fd]->resp.response_error("408", events[i].data.fd)) {
+                        if (close_fd(events[i].data.fd, epoll_fd))
+                            continue ;
+                    }
                 }
                 else if (events[i].events & EPOLLIN)
                 {
@@ -170,11 +164,13 @@ void        multplixing::lanch_server(server parse)
                     // std::cout << "client with an event : " << events[i].data.fd << " \n";
                     if (bytesRead > 0)
                         buffer.resize(bytesRead);
-                    if (bytesRead < 0)
+                    if (bytesRead == -1 || bytesRead == 0)
                     {
                         if (close_fd( events[i].data.fd, epoll_fd ))
                             continue ;
                     }
+                    // print with bold red the contet of buffer
+                    std::cout << "\033[1m\033[31m'" << bytesRead << "'\033[0m" << std::endl;
                     if (!fd_maps[events[i].data.fd]->flagg)
                     {
                         if (buffer.find("\r\n\r\n") != std::string::npos)
@@ -198,9 +194,15 @@ void        multplixing::lanch_server(server parse)
                             }
                             fd_maps[events[i].data.fd]->flagg = 1;
                         }
-                        // std::cout << "yoooooo\n";
-                        /**************** should be checked *********************/
-                        /****************        end        *********************/
+                        else {
+                            time_t end1 = time(NULL);
+                            if ((difftime(end1, fd_maps[events[i].data.fd]->start_time) > MAX_TIME)) {
+                                if (fd_maps[events[i].data.fd]->resp.response_error("408", events[i].data.fd)) {
+                                    if (close_fd(events[i].data.fd, epoll_fd))
+                                        continue ;
+                                }
+                            }
+                        }
                     }
                     /**************** FOR POST METHOD *********************/
 
@@ -264,7 +266,7 @@ void        multplixing::lanch_server(server parse)
                     //"CGI TESTING : '" << fd_maps[events[i].data.fd]->requst.stat_cgi << "'" << std::endl;
                     if (!fd_maps[events[i].data.fd]->requst.stat_cgi.compare("on"))
                         fd_maps[events[i].data.fd]->cgi_.checkifcgi(rq, fd_maps[events[i].data.fd]->is_cgi, events[i].data.fd);
-                    else {
+                    else if (!fd_maps[events[i].data.fd]->requst.stat_cgi.compare("off")){
                         if (fd_maps[events[i].data.fd]->resp.response_error("403", events[i].data.fd)) {
                             if (close_fd(events[i].data.fd, epoll_fd))
                                 continue ;
@@ -283,7 +285,6 @@ void        multplixing::lanch_server(server parse)
                     respo = 0;
                     if (!fd_maps[events[i].data.fd]->requst.method.compare("GET")) {
                         respo = (*it_fd).second->get.get_mthod(events[i].data.fd);
-                        // std::cout << "respo = " << respo << std::endl;
                     }
                     if (isfdclosed)
                     {

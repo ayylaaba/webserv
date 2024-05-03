@@ -25,7 +25,7 @@
 
 # define MAX_EVENTS 1024
 # define BUFFER_SIZE 1024
-# define MAX_TIME 20
+# define MAX_TIME 6
 
 // struct garbage_s {
 //     void *ptr;
