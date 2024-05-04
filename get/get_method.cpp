@@ -159,7 +159,7 @@ int    get_method::get_mthod(int fd)
                     return 1;
                 }
             }
-            else if (end - fd_maps[fd]->cgi_.start_time > 7) {
+            else if (difftime(end, fd_maps[fd]->cgi_.start_time) > 7) {
                 fd_maps[fd]->cgi_.is_error = 1;
                 std::string timeout = "GATEWAY TIMEOUT";
                 std::cout << "\033[1;34m" << fd_maps[fd]->cgi_.clientPid << "\033[0m" << std::endl;
