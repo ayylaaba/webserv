@@ -54,7 +54,7 @@ bool post::is_end_of_chunk(std::string max_body_size, std::string upload_path)
         concat.clear();
         content_type.clear();
         f = 0;
-        if (chunked_len > atoi(max_body_size.c_str()))
+        if (chunked_len > atol(max_body_size.c_str()))
         {
             // std::cout << "so????\n";
             g = 3;
@@ -90,7 +90,7 @@ bool post::post_method(std::string buffer, int fd)
 {
     std::map<int, Client*>::iterator   it_ = fd_maps.find(fd);
     // std::cout << "Upload_path = " << it_->second->requst.upload_path << "\n";
-    // std::cout << "max_body = '" << (*fd_maps[fd].requst.it)->max_body << "'\n";
+    std::cout << "max_bodyyyyyyy = '" << (*fd_maps[fd]->requst.it)->max_body << "'\n";
     // std::cout << "upload: " << it_->second->requst.upload_state << std::endl;
     g = 0;
     if (buffer.find("\r\n\r\n") != std::string::npos && f == 0)
@@ -155,11 +155,11 @@ bool post::post_method(std::string buffer, int fd)
         f = 1;
     }
     if (transfer_encoding == "chunked")
-        return chunked(buffer, it_->second->serv_.max_body, it_->second->requst.upload_path);
+        return chunked(buffer, (*fd_maps[fd]->requst.it)->max_body, it_->second->requst.upload_path);
     else if (content_type == "multipart/form-data" && !it_->second->is_cgi)
-        return boundary(buffer, it_->second->serv_.max_body, it_->second->requst.upload_path);
+        return boundary(buffer, (*fd_maps[fd]->requst.it)->max_body, it_->second->requst.upload_path);
     else
-        return binary(buffer, it_->second->serv_.max_body, it_->second->requst.upload_path);
+        return binary(buffer, (*fd_maps[fd]->requst.it)->max_body, it_->second->requst.upload_path);
     return false;
 }
 
@@ -294,7 +294,7 @@ bool post::boundary(std::string buffer, std::string max_body_size, std::string u
             {
                 outFile << concat.substr(0, concat.length() - sep.length());
                 len += concat.substr(0, concat.length() - sep.length()).length();
-                if (len > atoi(max_body_size.c_str()))
+                if (len > atol(max_body_size.c_str()))
                 {
                     for (size_t i = 0; i < vec.size(); i++)
                         remove(vec.at(i).c_str());
@@ -361,6 +361,7 @@ bool post::binary(std::string buffer, std::string max_body_size, std::string upl
         body_size += buffer.size();
         if (body_size > atoi(max_body_size.c_str()) || atoi(content_length.c_str()) > atoi(max_body_size.c_str()))
         {
+            // std::cout << body_size << std::endl;
             outFile.close();
             remove((upload_path + file).c_str());
             buffer.clear();
@@ -370,7 +371,7 @@ bool post::binary(std::string buffer, std::string max_body_size, std::string upl
             g = 3; // request flag;
             return true;
         }
-        else if (body_size > atoi(content_length.c_str()))
+        else if (body_size > atol(content_length.c_str()))
         {
             outFile.close();
             remove((upload_path + file).c_str());
@@ -381,7 +382,7 @@ bool post::binary(std::string buffer, std::string max_body_size, std::string upl
             g = 1; // request flag;
             return true;
         }
-        else if (body_size == atoi(content_length.c_str()))
+        else if (body_size == atol(content_length.c_str()))
         {
             outFile.close();
             buffer.clear();

@@ -18,8 +18,9 @@ server::server()
     message_response_stat();
 }
 
-server::server(std::map<std::string, std::string> &cont_s, std::vector<location*> &l_, std::vector<std::string> &vec_of_locations_)
+server::server(std::map<std::string, std::string> &cont_s, std::vector<location*> &l_, std::vector<std::string> &vec_of_locations_, std::string &max_bdy)
 {
+    max_body = max_bdy;
     cont = cont_s;
     l = l_;
     vec_of_locations = vec_of_locations_;
@@ -143,10 +144,13 @@ void        server::mange_file(const char* file)
             s_token++;
             int g = parse_both(rd_content, str);
             // parse_both(rd_content,str);
-            if (/*(!str.compare("}") && s_token == 1)*/ (g == 2 && s_token == 2))
+            if ((g == 2 && s_token == 2))
             {
                 check_duplicate_location(vec_of_locations);
-                server *new_s = new server(cont, l, vec_of_locations);
+
+                if (atoi(max_body.c_str()) < 0)
+                    max_body = "2147483647"; // ask later
+                server *new_s = new server(cont, l, vec_of_locations, max_body);
                 s.push_back(new_s);
                 garbage.push_back(new_s);
                 cont.clear();

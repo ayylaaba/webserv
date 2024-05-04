@@ -133,7 +133,11 @@ void post::parse_header(std::string buffer)
         if (line.find("\r") != std::string::npos)
             line.erase(line.find("\r"));
         if (line.substr(0, 14) == "Content-Length")
+        {
             content_length = line.substr(16);
+            if (atoi(content_length.c_str()) < 0)
+                content_length = "2147483647";
+        }
         else if (line.substr(0, 12) == "Content-Type" && t == 0)
         {
             content_type = line.substr(14);
