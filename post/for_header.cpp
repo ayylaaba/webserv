@@ -69,14 +69,15 @@ int request::parseHost(std::string hst, int fd) {
     for (it2 = fd_maps[fd]->serv_.s.begin(); it2 != fd_maps[fd]->serv_.s.end(); it2++) {
         if (!is_servername)
             break;
-        if ((*it2)->cont["listen"] == incoming_port && (*it2)->cont["server_name"] == hst) {
+        if ((*it2)->cont["listen"] == incoming_port && (*it2)->cont["server_name"] == ip) {
             it = it2;
+            std::cout << "SERVER IS : " << (*it)->cont["server_name"] << std::endl;
             return (0);
         }
     }
     for (it2 = fd_maps[fd]->serv_.s.begin(); it2 != fd_maps[fd]->serv_.s.end(); it2++) {
         if ((*it2)->cont["listen"] == incoming_port && (*it2)->cont["host"] == incoming_ip) {
-            it = it2;
+            *it = *it2;
             return (0);
         }
         else
