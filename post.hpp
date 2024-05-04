@@ -58,5 +58,4 @@ public:
     std::string generateCgiName();
 };
 
-
 #endif

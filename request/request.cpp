@@ -236,6 +236,7 @@ std::string     request::get_full_uri(server &server, Client& obj)
     for (size_t j = 0; j < (*it)->l.size(); j++)
     {
         loca_found = rewrite_location((*it)->l[j]->cont_l);
+        // std::cout << "size_,map = " << (*it)->l[j]->cont_l.size() << "\n";
         if (loca_found)
         {
             cgi_map = (*it)->l[j]->cgi_map;
@@ -258,7 +259,9 @@ int           request::rewrite_location(std::map<std::string, std::string> locat
     for (std::map<std::string, std::string>::iterator itb = location_map.begin(); itb != ite; itb++)
     {
         if ((!(*itb).first.compare("upload")))
+        {
             upload_state = (*itb).second;
+        }
         if ((!(*itb).first.compare("root")))
             loca__root = (*itb).second;
         if ((!itb->first.compare("cgi_status")))  
@@ -266,7 +269,9 @@ int           request::rewrite_location(std::map<std::string, std::string> locat
         if ((!(*itb).first.compare("upload")))
             upload_state = (*itb).second;
         if ((!(*itb).first.compare("upload_path")))
+        {
             upload_path = (*itb).second;
+        }
     }
     for (std::map<std::string, std::string>::iterator itb = location_map.begin(); itb != location_map.end(); itb++)
     {
