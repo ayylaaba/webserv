@@ -171,8 +171,8 @@ void        multplixing::lanch_server(server parse)
                         if (close_fd( events[i].data.fd, epoll_fd ))
                             continue ;
                     }
-                    // print with bold red the contet of buffer
-                    std::cout << "\033[1m\033[31m'" << bytesRead << "'\033[0m" << std::endl;
+                    if (bytesRead > 1)
+                        fd_maps[events[i].data.fd]->start_time = time(NULL);
                     if (!fd_maps[events[i].data.fd]->flagg)
                     {
                         if (buffer.find("\r\n\r\n") != std::string::npos)

@@ -211,11 +211,13 @@ int    get_method::get_mthod(int fd)
         {
             response = it->second->resp.get_header("200", "text/html", size.str(), *it->second);
             send(fd, response.c_str(), response.size(), 0);
+            fd_maps[fd]->start_time = time(NULL);
             it->second->res_header = 1;
         }
         else if (it->second->res_header)
         { 
             send(fd, buff_s.c_str(), buff_s.size(), 0);
+            fd_maps[fd]->start_time = time(NULL);
             it->second->rd_done = 1;
             return 1;
         }
