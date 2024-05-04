@@ -5,8 +5,11 @@
 extern std::map<int, Client *>  fd_maps; 
 extern std::map<int, std::vector<server*>::iterator> server_history;
 extern std::map<int, int> client_history;
+std::vector<void *> garbage;
 int isfdclosed;
 int flag = 0;
+
+
 
 in_addr_t multplixing::convertIpv4toBinary(const std::string& ip) {
     unsigned int parts[4];
@@ -24,8 +27,6 @@ in_addr_t multplixing::convertIpv4toBinary(const std::string& ip) {
     return htonl(addr);
 }
 
-
-
 int        multplixing::close_fd(int fd, int epll)
 {
     //"Client " << fd << " Was Removed From Map\n";
@@ -35,6 +36,7 @@ int        multplixing::close_fd(int fd, int epll)
     fd_maps.erase(fd_maps.find(fd));
     //"THE VALUE OF FD:" << fd << std::endl;
     close(fd);
+    delete fd_maps[fd];
     // exit(120);
     return 1;
 }
