@@ -5,11 +5,8 @@
 extern std::map<int, Client *>  fd_maps; 
 extern std::map<int, std::vector<server*>::iterator> server_history;
 extern std::map<int, int> client_history;
-std::vector<void *> garbage;
 int isfdclosed;
 int flag = 0;
-
-
 
 in_addr_t multplixing::convertIpv4toBinary(const std::string& ip) {
     unsigned int parts[4];
@@ -27,6 +24,8 @@ in_addr_t multplixing::convertIpv4toBinary(const std::string& ip) {
     return htonl(addr);
 }
 
+
+
 int        multplixing::close_fd(int fd, int epll)
 {
     //"Client " << fd << " Was Removed From Map\n";
@@ -36,7 +35,6 @@ int        multplixing::close_fd(int fd, int epll)
     fd_maps.erase(fd_maps.find(fd));
     //"THE VALUE OF FD:" << fd << std::endl;
     close(fd);
-    delete fd_maps[fd];
     // exit(120);
     return 1;
 }
@@ -53,7 +51,7 @@ void        multplixing::lanch_server(server parse)
     request     rq;
     response     resp_;
     std::vector<server*>::iterator it;
-    time_t  end;
+    // time_t  end;
     cgi cgi_;
     
     bool check_cgi = false;
@@ -144,14 +142,14 @@ void        multplixing::lanch_server(server parse)
                 fd_maps[client_socket]->istimeout  = false;
             }
             else {
-                end = time(NULL);
+                // time(NULL) = time(NULL);
                 std::map<int, Client *>::iterator it_fd = fd_maps.find(events[i].data.fd);
                 if (events[i].events & EPOLLRDHUP || events[i].events & EPOLLERR  || events[i].events & EPOLLHUP) 
                 {
                     if (close_fd( events[i].data.fd, epoll_fd ))
                         continue ;
                 }
-                if ((difftime(end, fd_maps[events[i].data.fd]->start_time) > MAX_TIME) && fd_maps[events[i].data.fd]->istimeout) {
+                if ((difftime(time(NULL), fd_maps[events[i].data.fd]->start_time) > MAX_TIME)) {
                     if (fd_maps[events[i].data.fd]->resp.response_error("408", events[i].data.fd)) {
                         if (close_fd(events[i].data.fd, epoll_fd))
                             continue ;
@@ -163,9 +161,21 @@ void        multplixing::lanch_server(server parse)
                     // std::cout << "client is reading :" << events[i].data.fd << " \n";
                     buffer.resize(BUFFER_SIZE);
                     bytesRead = recv(events[i].data.fd , &buffer[0], BUFFER_SIZE, 0);
+                    // std::cout << fd_maps[events[i].data.fd]->buf.size() << std::endl;
+                    // exit(12);
+                    if (!fd_maps[events[i].data.fd]->flagg)
+                    {
+                        fd_maps[events[i].data.fd]->buf += buffer;
+                        fd_maps[events[i].data.fd]->join_readbytes += bytesRead;
+                    }
+                    else
+                    {
+                        fd_maps[events[i].data.fd]->buf = buffer;
+                        fd_maps[events[i].data.fd]->join_readbytes = bytesRead;
+                    }
                     // std::cout << "client with an event : " << events[i].data.fd << " \n";
                     if (bytesRead > 0)
-                        buffer.resize(bytesRead);
+                        fd_maps[events[i].data.fd]->buf.resize(fd_maps[events[i].data.fd]->join_readbytes);
                     if (bytesRead == -1 || bytesRead == 0)
                     {
                         if (close_fd( events[i].data.fd, epoll_fd ))
@@ -175,12 +185,17 @@ void        multplixing::lanch_server(server parse)
                         fd_maps[events[i].data.fd]->start_time = time(NULL);
                     if (!fd_maps[events[i].data.fd]->flagg)
                     {
-                        if (buffer.find("\r\n\r\n") != std::string::npos)
+                        if (fd_maps[events[i].data.fd]->buf.find("\r\n\r\n") != std::string::npos)
                         {
+                            std::cout  << " IN THE REQUEST PARISNG\n";
+                            // fd_maps[events[i].data.fd]->buf += buffer;
+                            // buffer = fd_maps[events[i].data.fd]->buf;
                             // std::cout << "uri: " << rq.uri << " | " << fd_maps[events[i].data.fd]->is_cgi << std::endl;
-                            if (rq.parse_req(buffer, parse, events[i].data.fd ) == 1) {
+                            fd_maps[events[i].data.fd]->flagg = 1;
+                            if (rq.parse_req(fd_maps[events[i].data.fd]->buf, parse, events[i].data.fd ) == 1) {
                                         continue ;
                             }
+                            // std::cout << "hereeeee\n";
                             if (isfdclosed)
                                 continue;
                             fd_maps[events[i].data.fd]->requst     = rq;
@@ -194,7 +209,12 @@ void        multplixing::lanch_server(server parse)
                                 if (close_fd(events[i].data.fd, epoll_fd))
                                     continue ;
                             }
-                            fd_maps[events[i].data.fd]->flagg = 1;
+                        }
+                        else if (fd_maps[events[i].data.fd]->buf.find("\r\n\r\n") == std::string::npos && !fd_maps[events[i].data.fd]->flagg)
+                        {
+                            std::cout << "not in the request parsing.\n";
+                            // std::cout << "buffer: " << fd_maps[events[i].data.fd]->buf << std::endl;
+                            continue;
                         }
                         else {
                             time_t end1 = time(NULL);
@@ -223,7 +243,7 @@ void        multplixing::lanch_server(server parse)
                             }
                         }
                         /********************** end ********************/
-                        if (fd_maps[events[i].data.fd]->post_.post_method(buffer, events[i].data.fd)  && !it_fd->second->not_allow_method) {
+                        if (fd_maps[events[i].data.fd]->post_.post_method(fd_maps[events[i].data.fd]->buf, events[i].data.fd)  && !it_fd->second->not_allow_method) {
                             fd_maps[events[i].data.fd]->post_.j = 1;
                             fd_maps[events[i].data.fd]->flagg = 0;
                         }

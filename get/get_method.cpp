@@ -156,6 +156,7 @@ int    get_method::get_mthod(int fd)
                     fd_maps[fd]->cgi_.is_error = 0;
                     cgi::sendResponse(fd, content, "200", contenttype);
                     isfdclosed = true;
+                    fd_maps[fd]->istimeout = false;
                     return 1;
                 }
             }
@@ -167,9 +168,11 @@ int    get_method::get_mthod(int fd)
                 waitpid(fd_maps[fd]->cgi_.clientPid, NULL, 0);
                 cgi::sendResponse(fd, timeout, "504", contenttype);
                 isfdclosed = true;
+                fd_maps[fd]->istimeout = false;
                 return 1;
             }
             else {
+                fd_maps[fd]->istimeout = false;
                 it->second->rd_done = 0;
                 return 0;
             }
@@ -178,6 +181,8 @@ int    get_method::get_mthod(int fd)
             response = it->second->resp.get_header("200", extention_type, StringSize.str(), *it->second);
             it->second->read_f.open(it->second->requst.uri.c_str());
             send(fd, response.c_str(), response.size(), 0);
+            fd_maps[fd]->start_time = time(NULL);
+            fd_maps[fd]->istimeout = false;
         }
         else
         {
@@ -186,10 +191,13 @@ int    get_method::get_mthod(int fd)
             std::cout << x << "\n";
             if (it->second->read_f.gcount() > 0) {
                 send(fd, buff, x, 0);
+                fd_maps[fd]->start_time = time(NULL);
+                fd_maps[fd]->istimeout = false;
             }
             if (it->second->read_f.eof() || it->second->read_f.gcount() < 1024)
             {
-                std::cout << "the END \n";
+                fd_maps[fd]->start_time = time(NULL);
+                fd_maps[fd]->istimeout = false;
                 it->second->rd_done = 1;
                 return 1;
             }
@@ -213,12 +221,14 @@ int    get_method::get_mthod(int fd)
             send(fd, response.c_str(), response.size(), 0);
             fd_maps[fd]->start_time = time(NULL);
             it->second->res_header = 1;
+            fd_maps[fd]->istimeout = false;
         }
         else if (it->second->res_header)
         { 
             send(fd, buff_s.c_str(), buff_s.size(), 0);
             fd_maps[fd]->start_time = time(NULL);
             it->second->rd_done = 1;
+            fd_maps[fd]->istimeout = false;
             return 1;
         }
     }

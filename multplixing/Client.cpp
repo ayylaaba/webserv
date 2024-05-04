@@ -51,6 +51,8 @@ Client::~Client()
 Client::Client()
 {
     // std::cout<<"-----------------new Client-----------------\n";
+    buf = "";
+    join_readbytes      = 0;
     res_header          = 0;
     rd_done             = 0;
     u_can_send          = 0;

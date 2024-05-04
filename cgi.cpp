@@ -2,7 +2,6 @@
 #include "cgi.hpp"
 #include "multplixing.hpp"
 extern std::map<int, Client *> fd_maps;
-extern std::vector<void *> garbage;
 
 cgi::cgi(){
     // // std::cout << "Cgi Constructor \n";
@@ -55,8 +54,6 @@ void    cgi::cgi_method(request& rq, int fd) {
     file_in = "/tmp/" + name + ".in";
     char **env = fillCgiEnv(fd);
     char **args = new char*[3];
-    garbage.push_back(env);
-    garbage.push_back(args);
     start_time = time(NULL);
     clientPid = fork();
     if (clientPid == 0) {

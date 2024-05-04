@@ -1,6 +1,6 @@
 #include "../Client.hpp"
 
-extern std::map<int, Client *>  fd_maps;
+extern std::map<int, Client>  fd_maps;
 
 /*-- My Global variables --*/
 
@@ -21,26 +21,26 @@ int f = 0;
 
 post::post()
 {
-    // std::cout << "Default constructor called\n";
+    // // "Default constructor called\n";
 }
 
 post::post(const post &other)
 {
-    // std::cout << "Copy constructor called\n";
+    // // "Copy constructor called\n";
     *this = other;
 }
 
 post &post::operator=(const post &other)
 {
     (void)other;
-    // std::cout << "Copy assignment operator called\n";
+    // // "Copy assignment operator called\n";
     // if (this != &other)
     return *this;
 }
 
 post::~post()
 {
-    // std::cout << "Destructor called\n";
+    // // "Destructor called\n";
 }
 
 bool post::is_end_of_chunk(std::string max_body_size, std::string upload_path)
@@ -56,13 +56,13 @@ bool post::is_end_of_chunk(std::string max_body_size, std::string upload_path)
         f = 0;
         if (chunked_len > atoi(max_body_size.c_str()))
         {
-            // std::cout << "so????\n";
+            // // "so????\n";
             g = 3;
             remove((upload_path + file).c_str());
             chunked_len = 0;
             return true;
         }
-        // std::cout << "done;\n";
+        // // "done;\n";
         return true;
     }
     return false;
@@ -88,40 +88,55 @@ std::string sep = "";
 
 bool post::post_method(std::string buffer, int fd)
 {
-    std::map<int, Client *>::iterator   it_ = fd_maps.find(fd);
-    // std::cout << "Upload_path = " << it_->second->requst.upload_path << "\n";
-    // std::cout << "max_body = " << it_->second->serv_.max_body<< "\n";
-    // std::cout << "upload: " << it_->second->requst.upload_state << std::endl;
-    // std::cout << "====================\n";
-    // std::cout << buffer << std::endl;
-    // std::cout << "====================\n";
+    std::map<int, Client>::iterator   it_ = fd_maps.find(fd);
+    // "is cgi: =>" << it_->second.is_cgi << std::endl;
+    // // "Upload_path = " << it_->second.requst.upload_path << "\n";
+    // std::cout << "max_body = '" << (*fd_maps[fd].requst.it)->max_body << "'\n";
+    // // "upload: " << it_->second.requst.upload_state << std::endl;
+    // // "====================\n";
+    // // buffer << std::endl;
+    // // "====================\n";
     g = 0;
     if (buffer.find("\r\n\r\n") != std::string::npos && f == 0)
     {
         parse_header(buffer);
         if (content_type.empty() || (content_length.empty() && transfer_encoding != "chunked"))
         {
-            // std::cout << "content type is empty " << content_type << std::endl;
+            // // "content type is empty " << content_type << std::endl;
             g = 1;
             return true;
         }
         if (!extension_founded(content_type) && content_type.substr(0, 19) != "multipart/form-data")
         {
-            // std::cout << "content type: " << content_type << std::endl;
+            // // "content type: " << content_type << std::endl;
             g = 2;
             return true;
         }
         if (extension_founded(content_type))
         {
-            file = (generateUniqueFilename() + extension);
-            outFile.open((it_->second->requst.upload_path + file).c_str());
+            if (it_->second.is_cgi)
+            {
+                // "here\n";
+                outFile.open(("/tmp/" + generateCgiName()).c_str());
+            }
+            else
+            {
+                file = generateUniqueFilename() + extension;
+                outFile.open((it_->second.requst.upload_path + file).c_str());
+                // it_->second.requst.upload_path << std::endl;
+            }
+        }
+        else if (it_->second.is_cgi && content_type.substr(0, 19) == "multipart/form-data")
+        {
+            // "boundary CGI.\n";
+            outFile.open(("/tmp/" + generateCgiName()).c_str());
         }
         else if (content_type.substr(0, 19) != "multipart/form-data")
             return true;
         buffer = buffer.substr(buffer.find("\r\n\r\n") + 4);
         if (transfer_encoding == "chunked" && content_type.substr(0, 19) == "multipart/form-data")
         {
-            g = 2;
+            g = 4;
             return true;
         }
         if (transfer_encoding == "chunked")
@@ -131,7 +146,7 @@ bool post::post_method(std::string buffer, int fd)
         }
         else if (transfer_encoding != "chunked" && g == 10)
         {
-            // std::cout << "$$$" << transfer_encoding << "$$$" << std::endl;
+            // // "$$$" << transfer_encoding << "$$$" << std::endl;
             g = 1;
             buffer.clear();
             return true;
@@ -144,11 +159,11 @@ bool post::post_method(std::string buffer, int fd)
         f = 1;
     }
     if (transfer_encoding == "chunked")
-        return chunked(buffer, it_->second->serv_.max_body, it_->second->requst.upload_path);
-    else if (content_type == "multipart/form-data")
-        return boundary(buffer, it_->second->serv_.max_body, it_->second->requst.upload_path);
+        return chunked(buffer, it_->second.serv_.max_body, it_->second.requst.upload_path);
+    else if (content_type == "multipart/form-data" && !it_->second.is_cgi)
+        return boundary(buffer, it_->second.serv_.max_body, it_->second.requst.upload_path);
     else
-        return binary(buffer, it_->second->serv_.max_body, it_->second->requst.upload_path);
+        return binary(buffer, it_->second.serv_.max_body, it_->second.requst.upload_path);
     return false;
 }
 
@@ -195,9 +210,9 @@ int len = 0;
 
 bool post::boundary(std::string buffer, std::string max_body_size, std::string upload_path)
 {
-/* ----------------------------261896924513075486597166
-Content-Disposition: form-data; name=""; filename="boundary.txt"
-Content-Type: text/plain \r\n\r\n*/
+    /* ----------------------------261896924513075486597166
+    Content-Disposition: form-data; name=""; filename="boundary.txt"
+    Content-Type: text/plain \r\n\r\n*/
     concat += buffer;
     std::string file;
     std::stringstream ss;
@@ -302,7 +317,7 @@ Content-Type: text/plain \r\n\r\n*/
         }
         if (concat == (sep + "--\r\n"))
         {
-            std::cout << "done1.\n";
+            // "done1.\n";
             concat.clear();
             outFile.close();
             CType.clear();
@@ -344,6 +359,7 @@ bool post::chunked(std::string buffer, std::string max_body_size, std::string up
 
 bool post::binary(std::string buffer, std::string max_body_size, std::string upload_path)
 {
+    // buffer << std::endl;
     if (outFile.is_open())
     {
         outFile << buffer;
@@ -362,6 +378,7 @@ bool post::binary(std::string buffer, std::string max_body_size, std::string upl
         else if (body_size > atoi(content_length.c_str()))
         {
             outFile.close();
+            std::cout << "here.\n";
             remove((upload_path + file).c_str());
             buffer.clear();
             body_size = 0;
@@ -378,6 +395,7 @@ bool post::binary(std::string buffer, std::string max_body_size, std::string upl
             body_size = 0;
             f = 0; // header flag;
             g = 0; // request flag;
+            // "The End.\n";
             return true;
         }
         // time out should be handled in multiplixing;
