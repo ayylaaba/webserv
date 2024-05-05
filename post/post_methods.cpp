@@ -90,15 +90,22 @@ bool post::post_method(std::string buffer, int fd)
 {
     std::map<int, Client*>::iterator   it_ = fd_maps.find(fd);
     // std::cout << "Upload_path = " << it_->second->requst.upload_path << "\n";
-    std::cout << "max_bodyyyyyyy = '" << (*fd_maps[fd]->requst.it)->max_body << "'\n";
+    // std::cout << "max_bodyyyyyyy = '" << (*fd_maps[fd]->requst.it)->max_body << "'\n";
     // std::cout << "upload: " << it_->second->requst.upload_state << std::endl;
     g = 0;
+    if (it_->second->requst.upload_path.empty())
+        it_->second->requst.upload_path = it_->second->requst.loca__root;
     if (buffer.find("\r\n\r\n") != std::string::npos && f == 0)
     {
         parse_header(buffer);
-        if (content_type.empty() || (content_length.empty() && transfer_encoding != "chunked"))
+        if (content_length.empty() && transfer_encoding != "chunked")
         {
-            // std::cout << "content type is empty " << content_type << std::endl;
+            std::cout << "content length is empty " << std::endl;
+            g = 1;
+            return true;
+        }
+        if (content_type.empty())
+        {
             g = 1;
             return true;
         }

@@ -128,22 +128,28 @@ void post::parse_header(std::string buffer)
     int t = 0;
     std::istringstream stream (buffer);
     std::string line;
+    content_length = "";
+    content_type = "";
+    transfer_encoding = "";
     while (getline(stream, line))
     {
         if (line.find("\r") != std::string::npos)
             line.erase(line.find("\r"));
-        if (line.substr(0, 14) == "Content-Length")
+        if (line.find("Content-Length: ") != std::string::npos)
         {
+            std::cout << "================\n";
+            std::cout << "content_length" << std::endl;
+            std::cout << "================\n";
             content_length = line.substr(16);
             if (atoi(content_length.c_str()) < 0)
                 content_length = "2147483647";
         }
-        else if (line.substr(0, 12) == "Content-Type" && t == 0)
+        else if (line.find("Content-Type: ") != std::string::npos)
         {
             content_type = line.substr(14);
             t = 1;
         }
-        else if (line.substr(0, 17) == "Transfer-Encoding")
+        else if (line.find("Transfer-Encoding: ") != std::string::npos)
         {
             transfer_encoding = line.substr(19);
             g = 10;
