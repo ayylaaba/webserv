@@ -118,10 +118,16 @@ void        server::check_empty(const char* file_)
     while (std::getline(new_red, str))
     {
         if (str[0] != '#' && !isWhitespace(str))
+        {
+            new_red.close();
             return ;
+        }
     }
     if (new_red.eof())
+    {
+        new_red.close();
         print_err("Empty File");
+    }
 }
 void        server::mange_file(const char* file)
 {
@@ -149,7 +155,7 @@ void        server::mange_file(const char* file)
                 check_duplicate_location(vec_of_locations);
 
                 if (atoi(max_body.c_str()) < 0)
-                    max_body = "2147483647"; // ask later
+                    max_body = "2147483647";
                 server *new_s = new server(cont, l, vec_of_locations, max_body);
                 s.push_back(new_s);
                 garbage.push_back(new_s);
@@ -160,6 +166,7 @@ void        server::mange_file(const char* file)
             }
         }
     }
+    rd_content.close();
     check_server_deplicate();
 }
 
