@@ -255,45 +255,6 @@ void        multplixing::lanch_server(server parse)
                             fd_maps[events[i].data.fd]->post_.j = 1;
                             fd_maps[events[i].data.fd]->flagg = 0;
                         }
-                        if (fd_maps[events[i].data.fd]->post_.g == 1)
-                        {
-                            //"bad request.\n";
-                            if (it_fd->second->resp.response_error("400", events[i].data.fd))
-                            {
-                                // std::cout << "why?\n";
-                                fd_maps[events[i].data.fd]->post_.g = 0;
-                                if (close_fd(events[i].data.fd, epoll_fd))
-                                    continue ;
-                            }
-                        }
-                        else if (fd_maps[events[i].data.fd]->post_.g == 2) // unsupported media type;
-                        {
-                            if (it_fd->second->resp.response_error("415", events[i].data.fd))
-                            {
-                                fd_maps[events[i].data.fd]->post_.g = 0;
-                                if (close_fd(events[i].data.fd, epoll_fd))
-                                    continue ;
-                            }
-                        }
-                        else if (fd_maps[events[i].data.fd]->post_.g == 3)
-                        {
-                            //"413 error message\n";
-                            if (it_fd->second->resp.response_error("413", events[i].data.fd))
-                            {
-                                fd_maps[events[i].data.fd]->post_.g = 0;
-                                if (close_fd(events[i].data.fd, epoll_fd))
-                                    continue ;
-                            }
-                        }
-                        else if (fd_maps[events[i].data.fd]->post_.g == 4) // Not implemented.
-                        {
-                            if (it_fd->second->resp.response_error("501", events[i].data.fd))
-                            {
-                                fd_maps[events[i].data.fd]->post_.g = 0;
-                                if (close_fd(events[i].data.fd, epoll_fd))
-                                    continue ;
-                            }
-                        }
                     }
                     /****************        end        *********************/
                     fd_maps[events[i].data.fd]->u_can_send = 1;
@@ -335,6 +296,46 @@ void        multplixing::lanch_server(server parse)
                     }
                     if (!fd_maps[events[i].data.fd]->requst.method.compare("POST") && fd_maps[events[i].data.fd]->post_.j)
                     {
+                        fd_maps[events[i].data.fd]->post_.j = 0;
+                        if (fd_maps[events[i].data.fd]->post_.g == 1)
+                        {
+                            //"bad request.\n";
+                            if (it_fd->second->resp.response_error("400", events[i].data.fd))
+                            {
+                                // std::cout << "why?\n";
+                                fd_maps[events[i].data.fd]->post_.g = 0;
+                                if (close_fd(events[i].data.fd, epoll_fd))
+                                    continue ;
+                            }
+                        }
+                        else if (fd_maps[events[i].data.fd]->post_.g == 2) // unsupported media type;
+                        {
+                            if (it_fd->second->resp.response_error("415", events[i].data.fd))
+                            {
+                                fd_maps[events[i].data.fd]->post_.g = 0;
+                                if (close_fd(events[i].data.fd, epoll_fd))
+                                    continue ;
+                            }
+                        }
+                        else if (fd_maps[events[i].data.fd]->post_.g == 3)
+                        {
+                            //"413 error message\n";
+                            if (it_fd->second->resp.response_error("413", events[i].data.fd))
+                            {
+                                fd_maps[events[i].data.fd]->post_.g = 0;
+                                if (close_fd(events[i].data.fd, epoll_fd))
+                                    continue ;
+                            }
+                        }
+                        else if (fd_maps[events[i].data.fd]->post_.g == 4) // Not implemented.
+                        {
+                            if (it_fd->second->resp.response_error("501", events[i].data.fd))
+                            {
+                                fd_maps[events[i].data.fd]->post_.g = 0;
+                                if (close_fd(events[i].data.fd, epoll_fd))
+                                    continue ;
+                            }
+                        }
                         if (it_fd->second->resp.response_error("201", events[i].data.fd))
                         {
                             if (close_fd( events[i].data.fd, epoll_fd ))

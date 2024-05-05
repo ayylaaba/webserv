@@ -94,7 +94,7 @@ int request::parse_heade(std::string buffer, server &serv, int fd)
     std::vector<std::string> vec = serv.isolate_str(line , ' ');
     method = vec[0];
     path   = vec[1];
-    if (buffer.find("Host") == std::string::npos) {
+    if (buffer.find("Host:") == std::string::npos) {
         if (fd_maps[fd]->resp.response_error("400", fd)) {
             std::cout << "22222222222222222222\n";
             if (multplixing::close_fd(fd, fd_maps[fd]->epoll_fd))
