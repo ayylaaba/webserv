@@ -41,6 +41,7 @@ class request
         bool                                auto_index_stat;
         unsigned long                       g;
         size_t                              check;
+        int                                 r;
         int                                 x;
         int                                 k;
         int                                 redirection_stat;

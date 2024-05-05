@@ -297,7 +297,7 @@ void        multplixing::lanch_server(server parse)
                     if (!fd_maps[events[i].data.fd]->requst.method.compare("POST") && fd_maps[events[i].data.fd]->post_.j)
                     {
                         fd_maps[events[i].data.fd]->post_.j = 0;
-                        if (fd_maps[events[i].data.fd]->post_.g == 1)
+                        if (fd_maps[events[i].data.fd]->post_.g == 1 || fd_maps[events[i].data.fd]->requst.r == 1)
                         {
                             //"bad request.\n";
                             if (it_fd->second->resp.response_error("400", events[i].data.fd))
