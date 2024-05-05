@@ -49,6 +49,8 @@ class Client
         cgi                                 cgi_;
         time_t                              start_time;
         int                                 flagg;
+        int                                 err;
+        std::map<std::string, std::string>  err_page;
         Client(std::string uri_);
         Client(const Client& copy);
         std::map<std::string, std::string>  message_response_stat();

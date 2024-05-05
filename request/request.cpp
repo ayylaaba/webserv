@@ -105,6 +105,10 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
 {
     if (parse_heade(rq, server, fd) == 1)
         return 1;
+    if (!fd_maps[fd]->err) {
+        fd_maps[fd]->err_page = (*it)->err_page;
+        fd_maps[fd]->err = 1;
+    }
     std::map<int, Client *>::iterator it = fd_maps.find(fd);
     int             state;
 
@@ -231,11 +235,12 @@ std::string     request::get_full_uri(server &server, Client& obj)
         return("move_permently");
     }
     redirection_stat = 0;
-    if (path.length() > longest_loca.length()) //  that is means there's a content after the location
+    if (path.length() > longest_loca.length())
         rest_fldr   = path.substr(longest_loca.length()); 
     for (size_t j = 0; j < (*it)->l.size(); j++)
     {
         loca_found = rewrite_location((*it)->l[j]->cont_l);
+        // std::cout << "size_,map = " << (*it)->l[j]->cont_l.size() << "\n";
         if (loca_found)
         {
             cgi_map = (*it)->l[j]->cgi_map;
@@ -268,7 +273,9 @@ int           request::rewrite_location(std::map<std::string, std::string> locat
         if ((!(*itb).first.compare("upload")))
             upload_state = (*itb).second;
         if ((!(*itb).first.compare("upload_path")))
+        {
             upload_path = (*itb).second;
+        }
     }
     for (std::map<std::string, std::string>::iterator itb = location_map.begin(); itb != location_map.end(); itb++)
     {
@@ -276,12 +283,14 @@ int           request::rewrite_location(std::map<std::string, std::string> locat
             root_map = location_map;
         if ((!(*itb).first.compare("location") &&  !itb->second.compare(longest_loca)))
         {
-            // found = true;
+            found = true;
             auto_index_stat = check_autoindex(location_map);
             std::map<std::string, std::string>::iterator it_b = location_map.find("root");
             if (!rest_fldr.empty()) // rest 3amr
             {
                 full_path = (*it_b).second + "/" + rest_fldr;
+                std::cout << "full_path = " << full_path << "\n";
+                check = 1;
                 return 1;
             }
             else // add index on specify location
@@ -289,13 +298,14 @@ int           request::rewrite_location(std::map<std::string, std::string> locat
                 std::map<std::string, std::string>::iterator indx = location_map.find("index");
                 if (indx != location_map.end())
                 {
-                    // std::cout << "full_path = " << full_path << "\n";
                     full_path = (*it_b).second + "/" + (*indx).second; 
+                    check = 1;
                     return 1;
                 }
                 else
                 {
                     full_path = (*it_b).second; 
+                    check = 1;
                     return 1;
                 }
             }

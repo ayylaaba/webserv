@@ -18,8 +18,9 @@ server::server()
     message_response_stat();
 }
 
-server::server(std::map<std::string, std::string> &cont_s, std::vector<location*> &l_, std::vector<std::string> &vec_of_locations_, std::string &max_bdy)
+server::server(std::map<std::string, std::string> &cont_s, std::vector<location*> &l_, std::vector<std::string> &vec_of_locations_, std::string &max_bdy, std::map<std::string, std::string> &err)
 {
+    err_page = err;
     max_body = max_bdy;
     cont = cont_s;
     l = l_;
@@ -118,16 +119,10 @@ void        server::check_empty(const char* file_)
     while (std::getline(new_red, str))
     {
         if (str[0] != '#' && !isWhitespace(str))
-        {
-            new_red.close();
             return ;
-        }
     }
     if (new_red.eof())
-    {
-        new_red.close();
         print_err("Empty File");
-    }
 }
 void        server::mange_file(const char* file)
 {
@@ -155,8 +150,8 @@ void        server::mange_file(const char* file)
                 check_duplicate_location(vec_of_locations);
 
                 if (atoi(max_body.c_str()) < 0)
-                    max_body = "2147483647";
-                server *new_s = new server(cont, l, vec_of_locations, max_body);
+                    max_body = "2147483647"; // ask later
+                server *new_s = new server(cont, l, vec_of_locations, max_body, err_page);
                 s.push_back(new_s);
                 garbage.push_back(new_s);
                 cont.clear();
@@ -166,7 +161,6 @@ void        server::mange_file(const char* file)
             }
         }
     }
-    rd_content.close();
     check_server_deplicate();
 }
 

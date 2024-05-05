@@ -77,10 +77,8 @@ class server : public location
         int                                 check_exist(std::string path);
         static int                                 check_ip_nbr(std::string nbr);
         static int                                 check_ip(std::string ip);
-        server(std::map<std::string, std::string> &cont_s, std::vector<location*> &l_, std::vector<std::string> &vec_of_locations_, std::string &max_bdy);   
+        server(std::map<std::string, std::string> &cont_s, std::vector<location*> &l_, std::vector<std::string> &vec_of_locations_, std::string &max_bdy, std::map<std::string, std::string> &err);   
         server();
-
-
 };
 
 #endif

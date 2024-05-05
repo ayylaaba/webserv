@@ -16,27 +16,24 @@ int     response::response_error(std::string stat, int fd)
         //  // std::cout << "\t------------------- BEGIN response_error ---------------\t"<< std::endl;
         std::string response;
         std::stringstream size;
-        std::map<int, Client *>::iterator it = fd_maps.find(fd);
-        std::map<std::string, std::string>::iterator it_ = it->second->serv_.err_page.find(stat);
-        
-        // // std::cout << RED << "state = " << stat << RESET << "\n";
+        std::map<std::string, std::string>::iterator it_ = fd_maps[fd]->err_page.find(stat);
 
-        if( it_ != it->second->serv_.err_page.end())
+        if( it_ != fd_maps[fd]->err_page.end())
         {
             // // std::cout << "stat " <<  it_->first << " Path " << it_->second << "\n";
             // // std::cout << "Stat  File Found=  " << stat << "\n";
-            std::fstream    err_file;
+            std::ifstream    err_file;
+            std::stringstream sstr;
             err_file.open(it_->second.c_str());
-            char            buff_[1024];
-            bzero(buff_, 1024);
-            err_file.read(buff_, 1024).gcount();
-            response = buff_;
+            sstr << err_file.rdbuf();
+            response = sstr.str();
             size << response.size();
-            response = get_header(stat, "text/html", size.str(), *it->second);
-            response += it->second->get.to_string(buff_);
+            std::cout << "response -> " << it_->second.c_str() << " <-\n";
+            response = get_header(stat, "image/png", size.str(), *fd_maps[fd]);
+            response += sstr.str();
             // // std::cout << "response -> " << response << " <-\n";
             send(fd, response.c_str(), response.size(), 0);
-            it->second->rd_done = 1;
+            fd_maps[fd]->rd_done = 1;
             return (1);
         }
         else
@@ -52,11 +49,11 @@ int     response::response_error(std::string stat, int fd)
             _respond_stat += "<html><head><title> " + it_message_error->second + "</title></head>";
             _respond_stat +=  "<body> <strong>" + it_message_error->second + " </strong></body></html>";
             size << _respond_stat.size();
-            response = get_header(stat, "text/html", size.str(), *it->second);
+            response = get_header(stat, "text/html", size.str(), *fd_maps[fd]);
             // std::cout << "*********************************************************** " << response.size() << "\n";
             response += _respond_stat;
             send(fd, response.c_str(), response.size(), 0);
-            it->second->rd_done = 1;
+            fd_maps[fd]->rd_done = 1;
             return (1);
         }
         return (0);
