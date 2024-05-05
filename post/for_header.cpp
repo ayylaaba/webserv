@@ -94,7 +94,7 @@ int request::parse_heade(std::string buffer, server &serv, int fd)
     std::vector<std::string> vec = serv.isolate_str(line , ' ');
     method = vec[0];
     path   = vec[1];
-    if (buffer.find("Host") == std::string::npos) {
+    if (buffer.find("Host:") == std::string::npos) {
         if (fd_maps[fd]->resp.response_error("400", fd)) {
             std::cout << "22222222222222222222\n";
             if (multplixing::close_fd(fd, fd_maps[fd]->epoll_fd))
@@ -132,18 +132,18 @@ void post::parse_header(std::string buffer)
     {
         if (line.find("\r") != std::string::npos)
             line.erase(line.find("\r"));
-        if (line.substr(0, 14) == "Content-Length")
+        if (line.find("Content-Length:") != std::string::npos)
         {
             content_length = line.substr(16);
             if (atoi(content_length.c_str()) < 0)
                 content_length = "2147483647";
         }
-        else if (line.substr(0, 12) == "Content-Type" && t == 0)
+        else if (line.find("Content-Type:") != std::string::npos && t == 0)
         {
             content_type = line.substr(14);
             t = 1;
         }
-        else if (line.substr(0, 17) == "Transfer-Encoding")
+        else if (line.find("Transfer-Encoding:") != std::string::npos)
         {
             transfer_encoding = line.substr(19);
             g = 10;
