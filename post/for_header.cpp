@@ -130,25 +130,22 @@ void post::parse_header(std::string buffer)
     std::string line;
     while (getline(stream, line))
     {
-        if (line.find("\r") != std::string::npos)
-            line.erase(line.find("\r"));
         if (line.find("Content-Length:") != std::string::npos)
         {
             content_length = line.substr(16);
-            if (atoi(content_length.c_str()) < 0)
-                content_length = "2147483647";
+            content_length.erase(content_length.find("\r"));
         }
         else if (line.find("Content-Type:") != std::string::npos && t == 0)
         {
             content_type = line.substr(14);
+            content_type.erase(content_type.find("\r"));
             t = 1;
         }
         else if (line.find("Transfer-Encoding:") != std::string::npos)
         {
             transfer_encoding = line.substr(19);
+            transfer_encoding.erase(transfer_encoding.find("\r"));
             g = 10;
         }
-        if (line == "\r")
-            return ;
     }
 }

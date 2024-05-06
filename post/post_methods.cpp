@@ -90,7 +90,7 @@ bool post::post_method(std::string buffer, int fd)
 {
     std::map<int, Client*>::iterator   it_ = fd_maps.find(fd);
     // std::cout << "Upload_path = " << it_->second->requst.upload_path << "\n";
-    std::cout << "max_bodyyyyyyy = '" << (*fd_maps[fd]->requst.it)->max_body << "'\n";
+    // std::cout << "max_bodyyyyyyy = '" << (*fd_maps[fd]->requst.it)->max_body << "'\n";
     // std::cout << "upload: " << it_->second->requst.upload_state << std::endl;
     g = 0;
     if (buffer.find("\r\n\r\n") != std::string::npos && f == 0)
