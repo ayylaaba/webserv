@@ -56,6 +56,7 @@ public:
     bool containsValidCharacters(const std::string& str);
     std::string generateUniqueSuffix();
     std::string generateCgiName();
+    bool boundary_CGI(std::string buffer, std::string max_body_size);
 };
 
 #endif

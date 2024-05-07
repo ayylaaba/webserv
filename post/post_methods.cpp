@@ -52,7 +52,7 @@ bool post::is_end_of_chunk(std::string max_body_size, std::string upload_path)
         outFile.close();
         outFile.clear();
         concat.clear();
-        content_type.clear();
+        // content_type.clear();
         f = 0;
         if (chunked_len > atol(max_body_size.c_str()))
         {
@@ -112,8 +112,9 @@ bool post::post_method(std::string buffer, int fd)
         {
             if (it_->second->is_cgi)
             {
-                std::cout << "here\n";
-                outFile.open(("/tmp/" + generateCgiName()).c_str());
+                std::cout << "************* binary CGI **************\n";
+                fd_maps[fd]->cgi_.file_in = generateCgiName();
+                outFile.open(("/tmp/" + fd_maps[fd]->cgi_.file_in).c_str());
             }
             else
             {
@@ -124,8 +125,9 @@ bool post::post_method(std::string buffer, int fd)
         }
         else if (it_->second->is_cgi && content_type.substr(0, 19) == "multipart/form-data")
         {
-            std::cout << "boundary CGI.\n";
-            outFile.open(("/tmp/" + generateCgiName()).c_str());
+            // std::cout << "boundary CGI.\n";
+            fd_maps[fd]->cgi_.file_in = generateCgiName();
+            outFile.open(("/tmp/" + fd_maps[fd]->cgi_.file_in).c_str());
         }
         else if (content_type.substr(0, 19) != "multipart/form-data")
             return true;
@@ -159,7 +161,15 @@ bool post::post_method(std::string buffer, int fd)
     else if (content_type == "multipart/form-data" && !it_->second->is_cgi)
         return boundary(buffer, (*fd_maps[fd]->requst.it)->max_body, it_->second->requst.upload_path);
     else
-        return binary(buffer, (*fd_maps[fd]->requst.it)->max_body, it_->second->requst.upload_path);
+    {
+        if (it_->second->is_cgi && content_type == "multipart/form-data")
+        {
+            // std::cout << "boundary CGIII...\n";
+            return boundary_CGI(buffer, (*fd_maps[fd]->requst.it)->max_body);
+        }
+        else
+            return binary(buffer, (*fd_maps[fd]->requst.it)->max_body, it_->second->requst.upload_path);
+    }
     return false;
 }
 
@@ -269,7 +279,7 @@ bool post::boundary(std::string buffer, std::string max_body_size, std::string u
                     outFile.close();
                     vec.clear();
                     concat.clear();
-                    CType.clear();
+                    // CType.clear();
                     g = 2;
                     v = 0;
                     f = 0;
@@ -301,7 +311,7 @@ bool post::boundary(std::string buffer, std::string max_body_size, std::string u
                     outFile.close();
                     vec.clear();
                     concat.clear();
-                    CType.clear();
+                    // CType.clear();
                     f = 0; // header flag;
                     v = 0;
                     g = 3; // request flag;
@@ -316,7 +326,7 @@ bool post::boundary(std::string buffer, std::string max_body_size, std::string u
             std::cout << "done1.\n";
             concat.clear();
             outFile.close();
-            CType.clear();
+            // CType.clear();
             vec.clear();
             v = 0;
             f = 0;
@@ -359,34 +369,45 @@ bool post::binary(std::string buffer, std::string max_body_size, std::string upl
     {
         outFile << buffer;
         body_size += buffer.size();
+        std::cout << "======> " << content_length << std::endl;
+        // exit(20);
         if (body_size > atoi(max_body_size.c_str()) || atoi(content_length.c_str()) > atoi(max_body_size.c_str()))
         {
             // std::cout << body_size << std::endl;
+            // std::cout << "1111111111111" << std::endl;
+            // exit(3);
             outFile.close();
             remove((upload_path + file).c_str());
             buffer.clear();
             body_size = 0;
-            content_type.clear();
+            // content_type.clear();
             f = 0; // header flag;
             g = 3; // request flag;
             return true;
         }
-        else if (body_size > atol(content_length.c_str()))
+        else if (body_size > atoi(content_length.c_str()))
         {
+            // std::cout << body_size << std::endl;
+            // std::cout << "222222222222" << std::endl;
+            // std::cout << atoi(content_length.c_str()) << std::endl;
+            // exit(4);
             outFile.close();
             remove((upload_path + file).c_str());
             buffer.clear();
             body_size = 0;
-            content_type.clear();
+            // content_type.clear();
             f = 0; // header flag;
             g = 1; // request flag;
             return true;
         }
-        else if (body_size == atol(content_length.c_str()))
+        else if (body_size == atoi(content_length.c_str()))
         {
+            // std::cout << body_size << std::endl;
+            // std::cout << "********** finished ***********\n";
+            // exit(12);
             outFile.close();
             buffer.clear();
-            content_type.clear();
+            // content_type.clear();
             body_size = 0;
             f = 0; // header flag;
             g = 0; // request flag;
@@ -396,5 +417,52 @@ bool post::binary(std::string buffer, std::string max_body_size, std::string upl
     }
     else
         std::cerr << "Error opening file.\n";
+    return false;
+}
+
+bool post::boundary_CGI(std::string buffer, std::string max_body_size)
+{
+    /* ----------------------------261896924513075486597166
+    Content-Disposition: form-data; name=""; filename="boundary.txt"
+    Content-Type: text/plain \r\n\r\n*/
+    concat += buffer;
+    if (outFile.is_open() == true)
+    {
+        if (concat.find(sep + "--\r\n") != std::string::npos)
+        {
+            outFile << concat.substr(0, concat.find(sep + "--\r\n"));
+            concat = concat.substr(concat.find(sep + "--\r\n"));
+        }
+        else if (concat.find(sep + "--\r\n") == std::string::npos)
+        {
+            outFile << concat.substr(0, concat.length() - sep.length());
+            len += concat.substr(0, concat.length() - sep.length()).length();
+            if (len > atol(max_body_size.c_str()))
+            {
+                for (size_t i = 0; i < vec.size(); i++)
+                    remove(vec.at(i).c_str());
+                outFile.close();
+                vec.clear();
+                concat.clear();
+                CType.clear();
+                f = 0; // header flag;
+                v = 0;
+                g = 3; // request flag;
+                return true;
+            }
+            concat = concat.substr(concat.length() - sep.length());
+        }
+        if (concat == (sep + "--\r\n"))
+        {
+            std::cout << "done1.\n";
+            concat.clear();
+            outFile.close();
+            CType.clear();
+            vec.clear();
+            v = 0;
+            f = 0;
+            return true;
+        }
+    }
     return false;
 }

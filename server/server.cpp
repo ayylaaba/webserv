@@ -330,7 +330,7 @@ int    server::parse_both(std::ifstream& rd_cont, std::string &str_)
                 {
                     check_size(s_vec, 'l'); // check first loca's path
                     vec_of_locations.push_back(controle_slash(s_vec[1]));
-                    std::cout << "first location after normal = " << controle_slash(s_vec[1]) << "\n";
+                    // std::cout << "first location after normal = " << controle_slash(s_vec[1]) << "\n";
                     cont_l[s_vec[0]] = controle_slash(s_vec[1]);
                     std::getline(rd_cont, str_);
                     str = strtrim(str);
@@ -519,12 +519,12 @@ void        server::stor_values(std::vector<std::string> s, char ch)
         else if (!s[0].compare("upload"))
         {
             cont_l[s[0]] = s[1].substr(0, s[1].size());
-            std::cout << "server upload = " << s[1].substr(0, s[1].size()) << "\n";
+            // std::cout << "server upload = " << s[1].substr(0, s[1].size()) << "\n";
         }
         else if (!s[0].compare("upload_path"))
         {
             cont_l[s[0]] = controle_slash(s[1].substr(0, s[1].size()));
-            std::cout << "server upload_path = " << controle_slash(s[1].substr(0, s[1].size())) << "\n";
+            // std::cout << "server upload_path = " << controle_slash(s[1].substr(0, s[1].size())) << "\n";
         }
         else if (!s[0].compare("cgi_status"))
             cont_l[s[0]] = s[1].substr(0, s[1].size());

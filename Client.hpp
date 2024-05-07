@@ -50,6 +50,7 @@ class Client
         time_t                              start_time;
         int                                 flagg;
         int                                 err;
+        int                                 cgi_post;
         std::map<std::string, std::string>  err_page;
         Client(std::string uri_);
         Client(const Client& copy);

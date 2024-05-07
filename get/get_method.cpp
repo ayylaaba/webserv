@@ -22,7 +22,7 @@ std::string parsephpheader(std::string buffer)
             contenttype = line.substr(14);
             check = 1;
         }
-        else if (line.substr(0, 10) == "Set-Cookie") {
+        if (line.substr(0, 10) == "Set-Cookie") {
             cookie = line.substr(12);
         }
     }
@@ -31,7 +31,23 @@ std::string parsephpheader(std::string buffer)
     return contenttype;
 }
 
-std::string getContent (std::string file, int fd, std::string& contenttype) {
+
+std::string getphpstatus(std::string &content) {
+    std::istringstream stream (content);
+    std::string line;
+    std::string status;
+    // print with bold green the value of the content
+    while (getline(stream, line))
+    {
+        if (line.substr(0, 6) == "Status") {
+            status = line.substr(8);
+            return status;
+        }
+    }
+    return "200 OK";
+}
+
+std::string getContent (std::string file, int fd,  std::string& contenttype, int c) {
     std::string content;
     std::ifstream fileStream;
     fileStream.open(file.c_str());
@@ -41,10 +57,11 @@ std::string getContent (std::string file, int fd, std::string& contenttype) {
         content = sstr.str();
         fileStream.close();
     }
+    if (c)
+        return getphpstatus(content);
     if (fd_maps[fd]->cgi_.extension == "php" && !fd_maps[fd]->cgi_.is_error) {
         size_t pos = content.find("\r\n\r\n");
         contenttype = parsephpheader(content.substr(0, pos));
-        std::cout << contenttype << std::endl;
         if (pos != std::string::npos) {
             content = content.substr(pos + 4);
             return content;
@@ -57,16 +74,16 @@ std::string getContent (std::string file, int fd, std::string& contenttype) {
     return content;
 }
 
+
 std::string getErrorPage(int fd, std::string stat, std::string& status, std::string& contenttype) {
     if (stat == "500")
         status = "500 Internal Server Error";
     else if (stat == "504")
         status = "504 Gateway Timeout";
     if (fd_maps[fd]->serv_.err_page.find(stat) != fd_maps[fd]->serv_.err_page.end()) {
-        std::cout << "\033[1;32m test:::: " << stat  << " | '" << fd_maps[fd]->serv_.err_page[stat] << "'\033[0m" << std::endl;
         contenttype = fd_maps[fd]->requst.extentions[fd_maps[fd]->serv_.err_page[stat].substr(fd_maps[fd]->serv_.err_page[stat].find_last_of(".") + 1)];
         std::cout << "contenttype: " << contenttype << std::endl;
-        return getContent(fd_maps[fd]->serv_.err_page[stat], fd, contenttype);
+        return getContent(fd_maps[fd]->serv_.err_page[stat], fd,  contenttype, 0);
     }
     else {
         contenttype = "text/html";
@@ -84,7 +101,9 @@ void cgi::sendResponse(int fd, std::string& response, std::string stat, std::str
     if (fd_maps[fd]->cgi_.is_error) {
         checkcontent = 1;
         response = getErrorPage(fd, stat, status, contenttype);
-    };
+    }
+    if (fd_maps[fd]->requst.uri.substr(fd_maps[fd]->requst.uri.find_last_of(".") + 1) == "php")
+        status = getContent(fd_maps[fd]->cgi_.file_out,fd,  contenttype, 1);
     iss << response.length();
     std::string responseLength = iss.str();
     std::string httpResponse = "HTTP/1.1 " + status + "\r\n";
@@ -95,13 +114,53 @@ void cgi::sendResponse(int fd, std::string& response, std::string stat, std::str
     httpResponse += "\r\n";
     httpResponse += response;
 
-    // std::cout << httpResponse << std::endl;
+    std::cout << "'" << httpResponse << "'"<< std::endl;
 
     send(fd, httpResponse.c_str(), httpResponse.length(), 0);
     multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
 }
 
-
+int  cgiresponse(int fd) {
+    std::string         contenttype;
+    cookie = "";
+    time_t end = time(NULL);
+    std::string cgi_file = fd_maps[fd]->cgi_.file_out; // 0000 update
+    int checkex;
+    int wait = waitpid(fd_maps[fd]->cgi_.clientPid, &checkex, WNOHANG);
+    if (wait == fd_maps[fd]->cgi_.clientPid) {
+        std::string content;
+        checkcontent = 0;
+        fd_maps[fd]->cgi_.is_error = 0;
+        content = getContent(cgi_file,fd,  contenttype, 0);
+        if (WIFSIGNALED(checkex) || checkex) {
+            fd_maps[fd]->cgi_.is_error = 1;
+        cgi::sendResponse(fd, content, "500", contenttype);
+        isfdclosed = true;
+        return 1;
+    }
+    else {
+        fd_maps[fd]->cgi_.is_error = 0;
+        cgi::sendResponse(fd, content, "200", contenttype);
+        isfdclosed = true;
+        return 1;
+    }
+    }
+    else if (difftime(end, fd_maps[fd]->cgi_.start_time) > 7) {
+        fd_maps[fd]->cgi_.is_error = 1;
+        std::string timeout = "GATEWAY TIMEOUT";
+        std::cout << "\033[1;34m" << fd_maps[fd]->cgi_.clientPid << "\033[0m" << std::endl;
+        kill(fd_maps[fd]->cgi_.clientPid, 9);
+        waitpid(fd_maps[fd]->cgi_.clientPid, NULL, 0);
+        cgi::sendResponse(fd, timeout, "504", contenttype);
+        isfdclosed = true;
+        return 1;
+    }
+    else {
+        fd_maps[fd]->rd_done = 0;
+        return 0;
+    }
+    return 0;
+}
 
 int    get_method::get_mthod(int fd)
 {
@@ -114,8 +173,6 @@ int    get_method::get_mthod(int fd)
     std::stringstream   size;
     int                 check_path;
     int                 err_stat;
-    std::string         contenttype;
-    cookie = "";
 
     check_path = check_exist(it->second->requst.uri);
 
@@ -137,42 +194,7 @@ int    get_method::get_mthod(int fd)
     if (check_path == 1)
     {
         if (fd_maps[fd]->cgi_.stat_cgi) {
-            time_t end = time(NULL);
-            std::string cgi_file = fd_maps[fd]->cgi_.file_out; // 0000 update
-            int status;
-            int wait = waitpid(fd_maps[fd]->cgi_.clientPid, &status, WNOHANG);
-            if (wait == fd_maps[fd]->cgi_.clientPid) {
-                std::string content;
-                checkcontent = 0;
-                fd_maps[fd]->cgi_.is_error = 0;
-                content = getContent(cgi_file, fd, contenttype);
-                if (WIFSIGNALED(status) || status) {
-                    fd_maps[fd]->cgi_.is_error = 1;
-                    cgi::sendResponse(fd, content, "500", contenttype);
-                    isfdclosed = true;
-                    return 1;
-                }
-                else {
-                    fd_maps[fd]->cgi_.is_error = 0;
-                    cgi::sendResponse(fd, content, "200", contenttype);
-                    isfdclosed = true;
-                    return 1;
-                }
-            }
-            else if (difftime(end, fd_maps[fd]->cgi_.start_time) > 7) {
-                fd_maps[fd]->cgi_.is_error = 1;
-                std::string timeout = "GATEWAY TIMEOUT";
-                std::cout << "\033[1;34m" << fd_maps[fd]->cgi_.clientPid << "\033[0m" << std::endl;
-                kill(fd_maps[fd]->cgi_.clientPid, 9);
-                waitpid(fd_maps[fd]->cgi_.clientPid, NULL, 0);
-                cgi::sendResponse(fd, timeout, "504", contenttype);
-                isfdclosed = true;
-                return 1;
-            }
-            else {
-                it->second->rd_done = 0;
-                return 0;
-            }
+            return cgiresponse(fd);
         }
         if (!it->second->res_header) {
             response = it->second->resp.get_header("200", extention_type, StringSize.str(), *it->second);

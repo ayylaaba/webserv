@@ -94,9 +94,9 @@ int request::parse_heade(std::string buffer, server &serv, int fd)
     std::vector<std::string> vec = serv.isolate_str(line , ' ');
     method = vec[0];
     path   = vec[1];
+    std::cout << buffer << std::endl;
     if (buffer.find("Host:") == std::string::npos) {
         if (fd_maps[fd]->resp.response_error("400", fd)) {
-            std::cout << "22222222222222222222\n";
             if (multplixing::close_fd(fd, fd_maps[fd]->epoll_fd))
                 return 1;
         }
@@ -139,6 +139,7 @@ void post::parse_header(std::string buffer)
         {
             content_type = line.substr(14);
             content_type.erase(content_type.find("\r"));
+            std::cout << "content_type: " << content_type << std::endl;
             t = 1;
         }
         else if (line.find("Transfer-Encoding:") != std::string::npos)

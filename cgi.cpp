@@ -34,16 +34,22 @@ char **cgi::fillCgiEnv(int fd) {
     env_v.push_back("REQUEST_METHOD=" + fd_maps[fd]->requst.method);
     env_v.push_back("REDIRECT_STATUS=CGI");
     env_v.push_back("PATH_TRANSLATED=" + fd_maps[fd]->requst.uri);
-    env_v.push_back("QUERY_STRING=");
+    env_v.push_back("QUERY_STRING=" + fd_maps[fd]->cgi_.QUERY_STRING);
     env_v.push_back("HTTP_COOKIE=" + fd_maps[fd]->cgi_.HTTP_COOKIE);
+    if (fd_maps[fd]->requst.method == "POST") {
+        env_v.push_back("CONTENT_TYPE=" + fd_maps[fd]->post_.content_type);
+        env_v.push_back("CONTENT_LENGTH=" + fd_maps[fd]->post_.content_length);
+    }
     char **env = new char*[env_v.size() + 1];
     for (std::vector<std::string>::iterator it = env_v.begin(); it != env_v.end(); it++) {
         // print with bold blue the value of the env variable
+        std::cout << "\033[1;34m" << *it << "\033[0m" << std::endl;
         env[it - env_v.begin()] = strdup(it->c_str());
     }
     env[env_v.size()] = NULL;
     return env;
 }
+
 
 void    cgi::cgi_method(request& rq, int fd) {
     // //"\033[1;31mI AM ABOUT TO FORK\033[0m" << std::endl;
@@ -52,17 +58,14 @@ void    cgi::cgi_method(request& rq, int fd) {
     std::string name;
     iss >> name;
     file_out ="/tmp/" + name;
-    file_in = "/tmp/" + name + ".in";
     char **env = fillCgiEnv(fd);
     char **args = new char*[3];
-    garbage.push_back(env);
-    garbage.push_back(args);
     start_time = time(NULL);
     clientPid = fork();
     if (clientPid == 0) {
         freopen(file_out.c_str(), "w", stdout);
         freopen(file_out.c_str(), "w", stderr);
-        freopen(file_in.c_str(), "r", stdin);
+        freopen(("/tmp/" + file_in).c_str(), "r", stdin);
         // print with bold red "I AM IN THE CHILD PROCCESS"
         args[0] = strdup(compiler.c_str());
         args[1] = strdup(rq.uri.c_str());
@@ -72,6 +75,10 @@ void    cgi::cgi_method(request& rq, int fd) {
         execve(args[0], args, env);
         std::cerr << "\033[1;31mI AM IN THE CHILD PROCCESS\033[0m" << std::endl;
         kill(getpid(), 2);
+    }
+    else {
+        delete [] env;
+        delete [] args;
     }
     // //"\033[1;33m-----------------------------------\033[0m" << std::endl;
 }

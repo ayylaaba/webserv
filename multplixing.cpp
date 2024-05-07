@@ -142,6 +142,7 @@ void        multplixing::lanch_server(server parse)
                 fd_maps[client_socket]->start_time = time(NULL);
                 fd_maps[client_socket]->flagg      = 0;
                 fd_maps[client_socket]->err        = 0;
+                fd_maps[client_socket]->cgi_post   = 0;
                 // fd_maps[client_socket]->istimeout  = false;
             }
             else {
@@ -187,12 +188,10 @@ void        multplixing::lanch_server(server parse)
                     {
                         if (fd_maps[events[i].data.fd]->buf.find("\r\n\r\n") != std::string::npos)
                         {
-                            std::cout  << " IN THE REQUEST PARISNG\n";
                             fd_maps[events[i].data.fd]->flagg = 1;
                             if (rq.parse_req(fd_maps[events[i].data.fd]->buf, parse, events[i].data.fd ) == 1) {
                                         continue ;
                             }
-                            // std::cout << "hereeeee\n";
                             if (isfdclosed)
                                 continue;
                             fd_maps[events[i].data.fd]->requst     = rq;
@@ -235,10 +234,11 @@ void        multplixing::lanch_server(server parse)
                     {
                         if (fd_maps[events[i].data.fd]->is_cgi)
                         {
-                            // std::cout << fd_maps[events[i].data.fd]->requst.upload_path << "-> uploade in post -----------\n";
+                            std::cout  << "------------ CGI POST ENTER -----------\n";
                             if (fd_maps[events[i].data.fd]->post_.post_method(fd_maps[events[i].data.fd]->buf, events[i].data.fd)  && !it_fd->second->not_allow_method)
                             {
                                 fd_maps[events[i].data.fd]->post_.j = 1;
+                                fd_maps[events[i].data.fd]->cgi_post = 1;
                                 fd_maps[events[i].data.fd]->flagg = 0;
                             }
                         }
@@ -261,9 +261,15 @@ void        multplixing::lanch_server(server parse)
                     fd_maps[events[i].data.fd]->u_can_send = 1;
                     //"CGI TESTING : '" << fd_maps[events[i].data.fd]->requst.stat_cgi << "'" << std::endl;
                     if (fd_maps[events[i].data.fd]->is_cgi && !check_cgi) {
-                        
-                        fd_maps[events[i].data.fd]->cgi_.cgi_method(rq, events[i].data.fd);
+                        if (fd_maps[events[i].data.fd]->cgi_post && !fd_maps[events[i].data.fd]->requst.method.compare("POST")) {
+                            fd_maps[events[i].data.fd]->cgi_.cgi_method(rq, events[i].data.fd);
+                        }
+                        else if (!fd_maps[events[i].data.fd]->requst.method.compare("GET"))
+                            fd_maps[events[i].data.fd]->cgi_.cgi_method(rq, events[i].data.fd);
                         check_cgi = true;
+                        std::cout << "=============\n";
+                        std::cout << fd_maps[events[i].data.fd]->post_.content_type << std::endl;
+                        std::cout << "=============\n";
                     }
                 }
                 else if (events[i].events & EPOLLOUT && !it_fd->second->rd_done && it_fd->second->u_can_send) // must not always enter to here i think ask about it 
@@ -271,13 +277,10 @@ void        multplixing::lanch_server(server parse)
                     // fd_maps[events[i].data.fd]->istimeout = true;
                     // std::cout << "client " << events[i].data.fd << " is ready to send" << " \n";
                     respo = 0;
-                    if (!fd_maps[events[i].data.fd]->requst.method.compare("GET")) {
+                    if (!fd_maps[events[i].data.fd]->requst.method.compare("GET"))
                         respo = (*it_fd).second->get.get_mthod(events[i].data.fd);
-                    }
                     if (isfdclosed)
-                    {
                         continue;
-                    }
                     if (!fd_maps[events[i].data.fd]->requst.method.compare("DELETE"))
                     {
                         std:: string res_delete = (*it_fd).second->delet.delet_method((*it_fd).second->requst.uri, (*it_fd).second->serv_, events[i].data.fd);
@@ -295,7 +298,7 @@ void        multplixing::lanch_server(server parse)
                             }
                         }
                     }
-                    if (!fd_maps[events[i].data.fd]->requst.method.compare("POST") && fd_maps[events[i].data.fd]->post_.j)
+                    if (!fd_maps[events[i].data.fd]->requst.method.compare("POST") && fd_maps[events[i].data.fd]->post_.j && !fd_maps[events[i].data.fd]->is_cgi)
                     {
                         fd_maps[events[i].data.fd]->post_.j = 0;
                         if (fd_maps[events[i].data.fd]->post_.g == 1)
@@ -337,12 +340,18 @@ void        multplixing::lanch_server(server parse)
                                     continue ;
                             }
                         }
-                        if (it_fd->second->resp.response_error("201", events[i].data.fd))
+                        if (it_fd->second->resp.response_error("201", events[i].data.fd) && !fd_maps[events[i].data.fd]->is_cgi)
                         {
                             if (close_fd( events[i].data.fd, epoll_fd ))
                                 continue ;
                         }
+                        
                         respo = 1;
+                    }
+                    else if (!fd_maps[events[i].data.fd]->requst.method.compare("POST") && fd_maps[events[i].data.fd]->post_.j && fd_maps[events[i].data.fd]->is_cgi) {
+                        respo = cgiresponse(events[i].data.fd);
+                        if (isfdclosed)
+                            continue;
                     }
                     // std::cout << "\t\t stat kaml wla ba9i == "      << it_fd->second->rd_done << std::endl;
                     // std::cout <<"\t\t second.not_allow_method == " << it_fd->second->not_allow_method<< std::endl;

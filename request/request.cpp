@@ -130,14 +130,7 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
         it->second->not_allow_method = 1;
         return 0;
     }
-    /********************* edited by mhassani *****************/
-    // std::cout << "uri: " << uri << std::endl;
-    /********************* end **********************/
-    std::cout << "is cgi: " << fd_maps[fd]->is_cgi << std::endl;
-    std::cout << "URI = " << it->second->requst.uri << std::endl;
     uri = get_full_uri(server, *it->second);
-
-    std::cout << "URI = " << uri << std::endl;
     if (uri.empty())
     {
         state = it->second->resp.response_error("404", fd);    
@@ -225,7 +218,6 @@ std::string     request::get_full_uri(server &server, Client& obj)
 {
     int     loca_found = 0;
     longest_loca = find_longest_path(server, obj);
-    std::cout << "longest: " << longest_loca << std::endl;
     // if (longest_loca == "/" && path.length() > 1)
     //     return ("404");
     if (longest_loca == "move_permently")
@@ -240,7 +232,6 @@ std::string     request::get_full_uri(server &server, Client& obj)
     for (size_t j = 0; j < (*it)->l.size(); j++)
     {
         loca_found = rewrite_location((*it)->l[j]->cont_l);
-        // std::cout << "size_,map = " << (*it)->l[j]->cont_l.size() << "\n";
         if (loca_found)
         {
             cgi_map = (*it)->l[j]->cgi_map;
@@ -289,7 +280,6 @@ int           request::rewrite_location(std::map<std::string, std::string> locat
             if (!rest_fldr.empty()) // rest 3amr
             {
                 full_path = (*it_b).second + "/" + rest_fldr;
-                std::cout << "full_path = " << full_path << "\n";
                 check = 1;
                 return 1;
             }
