@@ -27,6 +27,16 @@ server::server(std::map<std::string, std::string> &cont_s, std::vector<location*
     vec_of_locations = vec_of_locations_;
 }
 
+int         server::check_forbidden(std::string path_)
+{
+    for (size_t i = 0; i < path_.size(); i++)
+    {
+       if (/*path_[i] == '?' || */ path_[i] == '=' || path_[i] == '[' || path_[i] == ']' || path_[i] == '@' || path_[i] == '&' || path_[i] == '%' || path_[i] == '*' || path_[i] == '$' || path_[i] == '#' || path_[i] == '<' || path_[i] == '>' || path_[i] == '|')
+            return 1;
+    }
+    return 0;
+}
+
 std::string     server::strtrim(std::string &str)
 {
     size_t  start;

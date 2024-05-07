@@ -109,24 +109,39 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
         fd_maps[fd]->err_page = (*it)->err_page;
         fd_maps[fd]->err = 1;
     }
+    // exit (10);
     std::map<int, Client *>::iterator it = fd_maps.find(fd);
     int             state;
+    it->second->resp.response_message = server.response_message;
 
     last          = rq.find("\r\n");
     vec           = server.isolate_str(rq.substr(0, last) , ' ');
+    if (vec.size() != 3 || last == std::string::npos)
+    {
+        state = it->second->resp.response_error("400", fd);    
+        it->second->not_allow_method = 1;
+        return 0;        
+    }
     method        = vec[0];
     path          = vec[1];
     http_version  = vec[2];
     if (http_version.compare("HTTP/1.1"))
     {
+        // exit (10);
         state = it->second->resp.response_error("505", fd);    
         it->second->not_allow_method = 1;
         return 0;
     } 
-    it->second->resp.response_message = server.response_message;
+    if (it->second->serv_.check_forbidden(path))
+    {
+        std::cout << "\033[37m" << " check_forbidden " << "\033[0m" << std::endl;
+        state = it->second->resp.response_error("400", fd);    
+        it->second->not_allow_method = 1;
+        return 0;        
+    }
     if (path == "/favicon.ico")
     {
-        state = it->second->resp.response_error("202", fd);
+        state = it->second->resp.response_error("404", fd);
         it->second->not_allow_method = 1;
         return 0;
     }
@@ -147,12 +162,6 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
         write(fd, msg.c_str(), msg.length());
         it->second->not_allow_method = 1;
         return 0;
-    }
-    if (vec.size() != 3 || last == std::string::npos)
-    {
-        state = it->second->resp.response_error("400", fd);    
-        it->second->not_allow_method = 1;
-        return 0;        
     }
     if (check_path_access(uri))
     {
