@@ -5,7 +5,7 @@ extern std::map<int, Client *> fd_maps;
 
 response::response()
 {
-    response_message = message_response_stat(); //
+    response_message = message_response_stat();
     fill_extentions();
 }
 

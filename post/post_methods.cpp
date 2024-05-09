@@ -379,7 +379,7 @@ bool post::boundary(std::string buffer, std::string max_body_size, std::string u
                     concat.clear();
                     len = 0;
                     v = 0;
-                    g = 3; // request flag;
+                    g = 3;
                     return true;
                 }
                 concat = concat.substr(concat.length() - sep.length());
@@ -404,7 +404,7 @@ bool post::boundary(std::string buffer, std::string max_body_size, std::string u
             concat.clear();
             len = 0;
             v = 0;
-            g = 1; // request flag;
+            g = 1;
             return true;
         }
         else if ((long long)len > atol(max_body_size.c_str()))
@@ -416,7 +416,7 @@ bool post::boundary(std::string buffer, std::string max_body_size, std::string u
             concat.clear();
             len = 0;
             v = 0;
-            g = 3; // request flag;
+            g = 3;
             return true;
         }
     }
@@ -436,7 +436,7 @@ void post::parse_hexa(std::string &remain)
         g = 1;
     }
     if (remain.find("\r\n") + 2 != std::string::npos)
-        remain = remain.substr(remain.find("\r\n") + 2); // the remaining body after hexa\r\n. if after hexa is \r\n it means that "\r\n0\r\n\r\n".
+        remain = remain.substr(remain.find("\r\n") + 2);
 }
 
 bool post::chunked(std::string buffer, std::string max_body_size, std::string upload_path)
@@ -448,7 +448,7 @@ bool post::chunked(std::string buffer, std::string max_body_size, std::string up
         {
             outFile << concat.substr(0, chunk_length);
             chunked_len += concat.substr(0, chunk_length).length();
-            concat = concat.substr(chunk_length + 2); //skip \r\n after the body;
+            concat = concat.substr(chunk_length + 2);
             parse_hexa(concat);
             if (g == 1)
             {
@@ -485,7 +485,7 @@ bool post::binary(std::string buffer, std::string max_body_size, std::string upl
             remove((upload_path + file).c_str());
             buffer.clear();
             body_size = 0;
-            g = 3; // request flag;
+            g = 3;
             return true;
         }
         else if (body_size > atol(content_length.c_str()))
@@ -494,7 +494,7 @@ bool post::binary(std::string buffer, std::string max_body_size, std::string upl
             remove((upload_path + file).c_str());
             buffer.clear();
             body_size = 0;
-            g = 1; // request flag;
+            g = 1;
             return true;
         }
         else if (body_size == atol(content_length.c_str()))
@@ -502,7 +502,7 @@ bool post::binary(std::string buffer, std::string max_body_size, std::string upl
             outFile.close();
             buffer.clear();
             body_size = 0;
-            g = 0; // request flag;
+            g = 0;
             return true;
         }
     }
@@ -541,7 +541,7 @@ bool post::boundary_CGI(std::string buffer, std::string max_body_size)
                 CType.clear();
 
                 v = 0;
-                g = 3; // request flag;
+                g = 3;
                 return true;
             }
             concat = concat.substr(concat.length() - sep.length());

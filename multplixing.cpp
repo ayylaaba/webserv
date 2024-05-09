@@ -37,7 +37,7 @@ int        multplixing::close_fd(int fd, int epll)
 
 int     multplixing::string_to_int(std::string str)
 {
-    return (atoi(str.c_str()));////////////////
+    return (atoi(str.c_str()));
 }
 
 void        multplixing::lanch_server(server parse)
@@ -98,13 +98,11 @@ void        multplixing::lanch_server(server parse)
         envts.events = EPOLLIN;
     
         epoll_ctl(epoll_fd, EPOLL_CTL_ADD, sockfd, &envts);
-
-        //"Server is listening on port '" << (*it)->cont["listen"] << "'...\n";
     }
 
     while (true) 
     {
-        signal(SIGPIPE, SIG_IGN); // magic this line ignore sigpip when you write to close fd the program exit by sigpip sign
+        signal(SIGPIPE, SIG_IGN);
         std::string buffer;
         std::vector<int>::iterator it;
 
@@ -223,7 +221,6 @@ void        multplixing::lanch_server(server parse)
                     {
                         if (fd_maps[events[i].data.fd]->is_cgi)
                         {
-                            std::cout  << "------------ CGI POST ENTER -----------\n";
                             if (fd_maps[events[i].data.fd]->post_.post_method(fd_maps[events[i].data.fd]->buf, events[i].data.fd)  && !it_fd->second->not_allow_method)
                             {
                                 fd_maps[events[i].data.fd]->post_.j = 1;
@@ -254,7 +251,7 @@ void        multplixing::lanch_server(server parse)
                                     continue ;
                             }
                         }
-                        else if (fd_maps[events[i].data.fd]->post_.g == 2) // unsupported media type;
+                        else if (fd_maps[events[i].data.fd]->post_.g == 2)
                         {
                             if (it_fd->second->resp.response_error("415", events[i].data.fd))
                             {
@@ -265,7 +262,6 @@ void        multplixing::lanch_server(server parse)
                         }
                         else if (fd_maps[events[i].data.fd]->post_.g == 3)
                         {
-                            //"413 error message\n";
                             if (it_fd->second->resp.response_error("413", events[i].data.fd))
                             {
                                 fd_maps[events[i].data.fd]->post_.g = 0;
@@ -273,7 +269,7 @@ void        multplixing::lanch_server(server parse)
                                     continue ;
                             }
                         }
-                        else if (fd_maps[events[i].data.fd]->post_.g == 4) // Not implemented.
+                        else if (fd_maps[events[i].data.fd]->post_.g == 4)
                         {
                             if (it_fd->second->resp.response_error("501", events[i].data.fd))
                             {
@@ -290,7 +286,6 @@ void        multplixing::lanch_server(server parse)
                     }
                     /****************        end        *********************/
                     fd_maps[events[i].data.fd]->u_can_send = 1;
-                    //"CGI TESTING : '" << fd_maps[events[i].data.fd]->requst.stat_cgi << "'" << std::endl;
                     if (fd_maps[events[i].data.fd]->is_cgi && !check_cgi) {
                         if (fd_maps[events[i].data.fd]->cgi_post && !fd_maps[events[i].data.fd]->requst.method.compare("POST")) {
                             fd_maps[events[i].data.fd]->cgi_.cgi_method(rq, events[i].data.fd);
@@ -300,7 +295,7 @@ void        multplixing::lanch_server(server parse)
                         check_cgi = true;
                     }
                 }
-                else if (events[i].events & EPOLLOUT && !it_fd->second->rd_done && it_fd->second->u_can_send) // must not always enter to here i think ask about it 
+                else if (events[i].events & EPOLLOUT && !it_fd->second->rd_done && it_fd->second->u_can_send)
                 {
                     respo = 0;
                     if (!fd_maps[events[i].data.fd]->requst.method.compare("GET"))

@@ -34,7 +34,6 @@ public:
     std::string content_type;
     int g;
     int j;
-    // int f;
 	post();
 	post(const post &other);
 	post &operator=(const post &other);

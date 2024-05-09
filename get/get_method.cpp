@@ -141,7 +141,7 @@ int  cgiresponse(int fd) {
     std::string         contenttype;
     cookie = "";
     time_t end = time(NULL);
-    std::string cgi_file = fd_maps[fd]->cgi_.file_out; // 0000 update
+    std::string cgi_file = fd_maps[fd]->cgi_.file_out;
     int checkex;
     int wait = waitpid(fd_maps[fd]->cgi_.clientPid, &checkex, WNOHANG);
     if (wait == fd_maps[fd]->cgi_.clientPid) {
@@ -293,7 +293,7 @@ std::streampos  get_method::get_fileLenth(std::string path)
 {
     std::ifstream file(path.c_str(), std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
-        return -1; // Return -1 to indicate error
+        return -1;
     }
     file.seekg(0, std::ios::end);
     std::streampos file_Size = file.tellg();
