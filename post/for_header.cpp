@@ -46,12 +46,20 @@ int request::parseHost(std::string hst, int fd) {
     getServer(fd);
     incoming_port = (*it)->cont["listen"];
     incoming_ip = (*it)->cont["host"];
+    // print with red the value of incoming_port and incoming_ip
+    std::cout << "\033[1;31m" << "incoming_port: " << incoming_port << "\033[0m" << std::endl;
+    std::cout << "\033[1;31m" << "incoming_ip: " << incoming_ip << "\033[0m" << std::endl;
     int is_servername = 0;
     std::string::size_type n = std::count(hst.begin(), hst.end(), ':');
     ip = hst.substr(0, hst.find(':'));
     checkifservername(ip, is_servername);
     port = hst.substr(hst.find(':') + 1);
-    if (((server::check_ip(ip) || server::valid_range(port)) && !is_servername) || n != 1) {
+    // print with blue the value of ip and port
+    std::cout << "\033[1;34m" << "ip: " << ip << "\033[0m" << std::endl;
+    std::cout << "\033[1;34m" << "port: " << port << "\033[0m" << std::endl;
+    if (ip == "localhost")
+        ip = "127.0.0.1";
+    if ((((server::check_ip(ip) || server::valid_range(port)) && !is_servername) || n != 1) || (port != incoming_port || (ip != incoming_ip && !is_servername))) {
         it3->second->resp.response_error("400", fd);
         multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
         isfdclosed = true;
@@ -74,7 +82,7 @@ int request::parseHost(std::string hst, int fd) {
     }
     for (it2 = fd_maps[fd]->serv_.s.begin(); it2 != fd_maps[fd]->serv_.s.end(); it2++) {
         if ((*it2)->cont["listen"] == incoming_port && (*it2)->cont["host"] == incoming_ip) {
-            *it = *it2;
+            it = it2;
             return (0);
         }
         else
