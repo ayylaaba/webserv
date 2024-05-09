@@ -15,7 +15,7 @@ response::~response(){
 void        response::fill_extentions()
 {   
     extention["html"] = "text/html; charset=UTF-8"; 
-    extention["txt"]  = "text/plain"; 
+    extention["txt"]  = "text/plain; charset=UTF-8"; 
     extention["jpg"] = "image/jpg"; 
     extention["jpeg"] = "image/jpeg";
     extention["png"] = "image/png";
@@ -58,7 +58,7 @@ std::string     response::get_exten_type(std::string path)
     if (b != extention.end())
         return ((*b).second);
     if ((b == extention.end() ))
-        return ("text/html");
+        return ("text/html; charset=UTF-8");
     return "10";
 }
 
@@ -66,6 +66,7 @@ int     response::response_error(std::string stat, int fd)
 {
         std::string response;
         std::stringstream size;
+        int                stat_;
         std::map<std::string, std::string>::iterator it_ = fd_maps[fd]->err_page.find(stat);
 
         if( it_ != fd_maps[fd]->err_page.end())
@@ -80,7 +81,9 @@ int     response::response_error(std::string stat, int fd)
             response = get_header(stat, ext, size.str(), *fd_maps[fd]);
             response += sstr.str();
             usleep(200000);
-            send(fd, response.c_str(), response.size(), 0);
+            stat_ = send(fd, response.c_str(), response.size(), 0);
+            if (stat_ == -1 || stat_ == 0)
+                return 1;
             fd_maps[fd]->rd_done = 1;
             return (1);
         }
@@ -99,14 +102,16 @@ int     response::response_error(std::string stat, int fd)
             response = get_header(stat, "text/html", size.str(), *fd_maps[fd]);
             response += _respond_stat;
             usleep(200000);
-            send(fd, response.c_str(), response.size(), 0);
+            stat_ = send(fd, response.c_str(), response.size(), 0);
+            if (stat_ == -1 || stat_ == 0)
+                return 1;
             fd_maps[fd]->rd_done = 1;
             return (1);
         }
         return (0);
 }
 
-std::map<std::string, std::string>        response::message_response_stat(/*std::map<std::string, std::string> &response_message*/)
+std::map<std::string, std::string>        response::message_response_stat()
 {
     response_message["200"] = "OK";
     response_message["201"] = "Created";

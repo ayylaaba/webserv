@@ -45,19 +45,19 @@ public:
     void parse_header(std::string buffer);
     void PutBodyInFile(std::string buffer, std::string extension);
     bool post_method(std::string buffer, int fd);
-    bool binary(std::string buffer, std::string max_body_size, std::string upload_path, int fd);
-    bool chunked(std::string buffer, std::string max_body_size, std::string upload_path, int fd);
+    bool binary(std::string buffer, std::string max_body_size, std::string upload_path);
+    bool chunked(std::string buffer, std::string max_body_size, std::string upload_path);
     bool extension_founded(std::string contentType);
     void parse_hexa(std::string &remain);
-    bool is_end_of_chunk(std::string max_body_size, std::string upload_path, int fd);
-    bool boundary(std::string buffer, std::string max_body_size, std::string upload_path, int fd);
+    bool is_end_of_chunk(std::string max_body_size, std::string upload_path);
+    bool boundary(std::string buffer, std::string max_body_size, std::string upload_path);
     bool nameExistsInVector(std::vector<std::string> vec, std::string target);
     std::string parse_boundary_header(std::string buffer);
     std::string cat_header(std::string buffer);
     bool containsValidCharacters(const std::string& str);
     std::string generateUniqueSuffix();
     std::string generateCgiName();
-    bool boundary_CGI(std::string buffer, std::string max_body_size, int fd);
+    bool boundary_CGI(std::string buffer, std::string max_body_size);
 };
 
 #endif

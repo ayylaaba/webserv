@@ -10,10 +10,9 @@ int isfdclosed;
 int flag = 0;
 
 
-
 in_addr_t multplixing::convertIpv4toBinary(const std::string& ip) {
     unsigned int parts[4];
-    if (sscanf(ip.c_str(), "%u.%u.%u.%u", &parts[0], &parts[1], &parts[2], &parts[3]) != 4) {
+    if (std::sscanf(ip.c_str(), "%u.%u.%u.%u", &parts[0], &parts[1], &parts[2], &parts[3]) != 4) {
         std::cerr << "Invalid IP address" << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -24,6 +23,8 @@ in_addr_t multplixing::convertIpv4toBinary(const std::string& ip) {
         }
     }
     uint32_t addr = (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3];
+    std::cout << "addr: " << htonl(addr) << std::endl;
+
     return htonl(addr);
 }
 
@@ -66,12 +67,10 @@ void        multplixing::lanch_server(server parse)
         server_history[sockfd] = it;
 
         sockaddr_in sock_info;
-
+        memset(&sock_info, 0, sizeof(sock_info));
         sock_info.sin_family = AF_INET;
         sock_info.sin_port = htons(string_to_int((*it)->cont["listen"]));
-        uint32_t ip = convertIpv4toBinary((*it)->cont["host"]);
-        sock_info.sin_addr.s_addr = ip;
-        //"Ip Address : " << inet_ntoa(sock_info.sin_addr) << std::endl;
+        inet_pton(AF_INET, (*it)->cont["host"].c_str(), &sock_info.sin_addr);
         int sp = 1;
         setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, &sp, sizeof(sp));
         if (bind(sockfd, (struct sockaddr *)&sock_info, sizeof(sock_info))) {
@@ -111,7 +110,7 @@ void        multplixing::lanch_server(server parse)
         std::string buffer;
         std::vector<int>::iterator it;
 
-        signal(SIGPIPE, SIG_IGN); // magic this line ignore sigpip when you write to close fd the program exit by sigpip sign
+        signal(SIGPIPE, SIG_IGN);
         int num = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
         for (int i = 0; i < num; i++) {
             check_cgi = false;

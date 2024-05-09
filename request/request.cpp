@@ -102,12 +102,14 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
 {
     if (parse_heade(rq, server, fd) == 1)
         return 1;
+    std::cout << "severNAME : " << (*it)->cont["server_name"] << std::endl;
     if (!fd_maps[fd]->err) {
         fd_maps[fd]->err_page = (*it)->err_page;
         fd_maps[fd]->err = 1;
     }
     std::map<int, Client *>::iterator it = fd_maps.find(fd);
     int             state;
+    int             stat_;
     it->second->resp.response_message = server.response_message;
 
     last          = rq.find("\r\n");
@@ -153,7 +155,9 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     if (redirection_stat == 1)
     {
         std::string msg = "HTTP/1.1 301 Moved Permanently\r\nlocation: " + it->second->redirec_path + "\r\n\r\n";
-        write(fd, msg.c_str(), msg.length());
+        stat_ = write(fd, msg.c_str(), msg.length());
+        if (stat_ == -1 || stat_ == 0)
+                return 1;
         it->second->not_allow_method = 1;
         return 0;
     }
