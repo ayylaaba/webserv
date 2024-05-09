@@ -127,7 +127,6 @@ void cgi::sendResponse(int fd, std::string& response, std::string stat, std::str
         int x = ss.read(buff, 1024).gcount();
         if (x > 0) {
             off += x;
-            std::cout << off << std::endl;
             send(fd, buff, x, 0);
         }
         if (ss.eof() || ss.gcount() < 1024) {
@@ -146,7 +145,6 @@ int  cgiresponse(int fd) {
     int checkex;
     int wait = waitpid(fd_maps[fd]->cgi_.clientPid, &checkex, WNOHANG);
     if (wait == fd_maps[fd]->cgi_.clientPid) {
-        std::cout << fd_maps[fd]->cgi_.stat_cgi << " | " << fd_maps[fd]->completed << std::endl;
         std::string content;
         checkcontent = 0;
         fd_maps[fd]->cgi_.is_error = 0;
@@ -165,7 +163,6 @@ int  cgiresponse(int fd) {
         }
     }
     else if (fd_maps[fd]->cgi_.stat_cgi && fd_maps[fd]->completed) {
-        std::cout << "I AM HERE\n";
         fd_maps[fd]->cgi_.is_error = 0;
         std::string content = getContent(cgi_file,fd,  contenttype, 0);
         cgi::sendResponse(fd, content, "200", contenttype);

@@ -49,7 +49,6 @@ int request::parseHost(std::string hst, int fd) {
     int is_servername = 0;
     std::string::size_type n = std::count(hst.begin(), hst.end(), ':');
     ip = hst.substr(0, hst.find(':'));
-    std::cout << "ip : " << ip << std::endl;
     checkifservername(ip, is_servername);
     port = hst.substr(hst.find(':') + 1);
     if (((server::check_ip(ip) || server::valid_range(port)) && !is_servername) || n != 1) {

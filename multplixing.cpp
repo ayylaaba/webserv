@@ -23,8 +23,6 @@ in_addr_t multplixing::convertIpv4toBinary(const std::string& ip) {
         }
     }
     uint32_t addr = (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3];
-    std::cout << "addr: " << htonl(addr) << std::endl;
-
     return htonl(addr);
 }
 
