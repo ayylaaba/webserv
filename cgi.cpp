@@ -1,18 +1,17 @@
-#include "Client.hpp"
-#include "cgi.hpp"
-#include "multplixing.hpp"
+#include "headers/Client.hpp"
+#include "headers/cgi.hpp"
+#include "headers/multplixing.hpp"
 extern std::map<int, Client *> fd_maps;
 extern std::vector<void *> garbage;
 
-cgi::cgi(){
-    // // std::cout << "Cgi Constructor \n";
+cgi::cgi()
+{
 }
 
 void    cgi::checkifcgi(request& rq, int& iscgi, int fd) {
     std::string path = rq.uri;
     std::string::iterator it = path.begin() + path.find_last_of("/") + 1;
     if (it == path.end()) {
-        // //"\033[1;38;5;201mTHIS IS NOT CGI, THIS IS A FOLDER\033[0m" << std::endl;
         iscgi = 0;
         stat_cgi = 0;
         return ;
@@ -24,7 +23,6 @@ void    cgi::checkifcgi(request& rq, int& iscgi, int fd) {
         stat_cgi = 1;
         compiler = fd_maps[fd]->requst.cgi_map[file.substr(file.find_last_of(".") + 1)];
         extension = file.substr(file.find_last_of(".") + 1);
-        // //"\033[1;38;5;82mTHIS IS CGI, yaaaY " << compiler << "\033[0m" << std::endl;
     }
 }
 
@@ -42,8 +40,6 @@ char **cgi::fillCgiEnv(int fd) {
     }
     char **env = new char*[env_v.size() + 1];
     for (std::vector<std::string>::iterator it = env_v.begin(); it != env_v.end(); it++) {
-        // print with bold blue the value of the env variable
-        std::cout << "\033[1;34m" << *it << "\033[0m" << std::endl;
         env[it - env_v.begin()] = strdup(it->c_str());
     }
     env[env_v.size()] = NULL;
@@ -52,7 +48,6 @@ char **cgi::fillCgiEnv(int fd) {
 
 
 void    cgi::cgi_method(request& rq, int fd) {
-    // //"\033[1;31mI AM ABOUT TO FORK\033[0m" << std::endl;
     std::stringstream iss;
     iss << time(NULL);
     std::string name;
@@ -65,22 +60,20 @@ void    cgi::cgi_method(request& rq, int fd) {
     if (clientPid == 0) {
         freopen(file_out.c_str(), "w", stdout);
         freopen(file_out.c_str(), "w", stderr);
-        freopen(("/tmp/" + file_in).c_str(), "r", stdin);
-        // print with bold red "I AM IN THE CHILD PROCCESS"
+        if (fd_maps[fd]->requst.method == "POST")
+            freopen(("/tmp/" + file_in).c_str(), "r", stdin);
         args[0] = strdup(compiler.c_str());
         args[1] = strdup(rq.uri.c_str());
         args[2] = NULL;
         std::string current_path = rq.uri.substr(0, rq.uri.find_last_of("/"));
         chdir(current_path.c_str());
         execve(args[0], args, env);
-        std::cerr << "\033[1;31mI AM IN THE CHILD PROCCESS\033[0m" << std::endl;
         kill(getpid(), 2);
     }
     else {
         delete [] env;
         delete [] args;
     }
-    // //"\033[1;33m-----------------------------------\033[0m" << std::endl;
 }
 
 

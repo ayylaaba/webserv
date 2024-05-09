@@ -1,6 +1,6 @@
-#include "../request.hpp"
-#include "../Client.hpp"
-#include "../multplixing.hpp"
+#include "../headers/request.hpp"
+#include "../headers/Client.hpp"
+#include "../headers/multplixing.hpp"
 
 std::map<int, std::vector<server*>::iterator> server_history;
 std::map<int, int> client_history;
@@ -23,7 +23,6 @@ int isIP(std::string host) {
 }
 
 void request::getServer(int fd) {
-    // magic hh
     int client_fd = client_history[fd];
     it = server_history[client_fd];
 }
@@ -48,7 +47,6 @@ int request::parseHost(std::string hst, int fd) {
     incoming_port = (*it)->cont["listen"];
     incoming_ip = (*it)->cont["host"];
     int is_servername = 0;
-    // print with vold green the value of hst
     std::string::size_type n = std::count(hst.begin(), hst.end(), ':');
     ip = hst.substr(0, hst.find(':'));
     checkifservername(ip, is_servername);
@@ -71,7 +69,6 @@ int request::parseHost(std::string hst, int fd) {
             break;
         if ((*it2)->cont["listen"] == incoming_port && (*it2)->cont["server_name"] == ip) {
             it = it2;
-            std::cout << "SERVER IS : " << (*it)->cont["server_name"] << std::endl;
             return (0);
         }
     }
@@ -94,7 +91,6 @@ int request::parse_heade(std::string buffer, server &serv, int fd)
     std::vector<std::string> vec = serv.isolate_str(line , ' ');
     method = vec[0];
     path   = vec[1];
-    std::cout << buffer << std::endl;
     if (buffer.find("Host:") == std::string::npos) {
         if (fd_maps[fd]->resp.response_error("400", fd)) {
             if (multplixing::close_fd(fd, fd_maps[fd]->epoll_fd))
@@ -128,6 +124,9 @@ void post::parse_header(std::string buffer)
     int t = 0;
     std::istringstream stream (buffer);
     std::string line;
+    content_length = "";
+    content_type = "";
+    transfer_encoding = "";
     while (getline(stream, line))
     {
         if (line.find("Content-Length:") != std::string::npos)
@@ -139,7 +138,6 @@ void post::parse_header(std::string buffer)
         {
             content_type = line.substr(14);
             content_type.erase(content_type.find("\r"));
-            std::cout << "content_type: " << content_type << std::endl;
             t = 1;
         }
         else if (line.find("Transfer-Encoding:") != std::string::npos)

@@ -1,5 +1,5 @@
-#include "../request.hpp"
-#include "../Client.hpp"
+#include "../headers/request.hpp"
+#include "../headers/Client.hpp"
 #define MAX_PATH = 1000;
 extern std::map<int, Client *> fd_maps;
 extern int query;
@@ -14,11 +14,8 @@ int               request::one_of_allowed(std::string mehod, std::vector<std::st
     }
     std::vector<std::string>::iterator it = allowed_methods.begin();
     std::vector<std::string>::iterator ite = allowed_methods.end();
-    if ((*it).compare("allow_methods"))
-    {
-        exit (1);
+    if (!(*it).compare("allow_methods"))
         it++;
-    }
     while (it != ite)
     {
         if (!it->compare(mehod))
@@ -48,7 +45,7 @@ int            request::check_path_access(std::string path)
 {
     char current_path_[1000];
     std::string compare_root_loca = loca__root.substr(0, loca__root.length() - 1);
-    if (realpath(path.c_str(), current_path_) !=   NULL) // leak
+    if (realpath(path.c_str(), current_path_) !=   NULL)
     {
         std::string current_path(current_path_);
         if (current_path.compare(0, compare_root_loca.length(), compare_root_loca) != 0)
@@ -109,7 +106,6 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
         fd_maps[fd]->err_page = (*it)->err_page;
         fd_maps[fd]->err = 1;
     }
-    // exit (10);
     std::map<int, Client *>::iterator it = fd_maps.find(fd);
     int             state;
     it->second->resp.response_message = server.response_message;
@@ -127,14 +123,12 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     http_version  = vec[2];
     if (http_version.compare("HTTP/1.1"))
     {
-        // exit (10);
         state = it->second->resp.response_error("505", fd);    
         it->second->not_allow_method = 1;
         return 0;
     } 
     if (it->second->serv_.check_forbidden(path))
     {
-        std::cout << "\033[37m" << " check_forbidden " << "\033[0m" << std::endl;
         state = it->second->resp.response_error("400", fd);    
         it->second->not_allow_method = 1;
         return 0;        
@@ -156,7 +150,7 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     if (access(uri.c_str(), F_OK) < 0)
         uri = hex_to_ascii(uri);
     x = it->second->get.check_exist(uri);
-    if (redirection_stat == 1) // 0000
+    if (redirection_stat == 1)
     {
         std::string msg = "HTTP/1.1 301 Moved Permanently\r\nlocation: " + it->second->redirec_path + "\r\n\r\n";
         write(fd, msg.c_str(), msg.length());
@@ -183,13 +177,6 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
             return 0;
         }
     }
-    // if (!get_exten_type(uri).compare("Unsupported"))
-    // {
-    //     state = it->second->resp.response_error("415", fd);
-    //     it->second->not_allow_method = 1;
-    //     return 0;
-    // }
-    (void)state;
     reset();
     return 0;
 }
@@ -260,12 +247,14 @@ std::string     request::get_full_uri(server &server, Client& obj)
 int           request::rewrite_location(std::map<std::string, std::string> location_map)
 {
     std::map<std::string, std::string>::iterator      ite = location_map.end();
+    std::map<std::string, std::string>::iterator      it_cgi_check = location_map.find("cgi_status");
+
+    if (it_cgi_check == location_map.end())
+        stat_cgi = "off";
     for (std::map<std::string, std::string>::iterator itb = location_map.begin(); itb != ite; itb++)
     {
         if ((!(*itb).first.compare("upload")))
-        {
             upload_state = (*itb).second;
-        }
         if ((!(*itb).first.compare("root")))
             loca__root = (*itb).second;
         if ((!itb->first.compare("cgi_status")))  
@@ -365,6 +354,8 @@ void        request::fill_extentions()
 
 void request::reset() 
 {
+    k = 0;
+    method_state = false;
     http_version.clear();
     loca_fldr.clear();
     rest_fldr.clear();

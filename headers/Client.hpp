@@ -51,6 +51,8 @@ class Client
         int                                 flagg;
         int                                 err;
         int                                 cgi_post;
+        int                                 f;
+        int                                 completed;
         std::map<std::string, std::string>  err_page;
         Client(std::string uri_);
         Client(const Client& copy);
