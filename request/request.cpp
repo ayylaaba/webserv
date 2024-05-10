@@ -107,15 +107,14 @@ int            request::parse_req(std::string   rq, server &server, int fd)
         fd_maps[fd]->err = 1;
     }
     std::map<int, Client *>::iterator it = fd_maps.find(fd);
-    int             state;
-    int             stat_;
+    int                               stat_;
     it->second->resp.response_message = server.response_message;
 
     last          = rq.find("\r\n");
     vec           = server.isolate_str(rq.substr(0, last) , ' ');
     if (vec.size() != 3 || last == std::string::npos)
     {
-        state = it->second->resp.response_error("400", fd);    
+        it->second->resp.response_error("400", fd);    
         it->second->not_allow_method = 1;
         return 0;        
     }
@@ -124,26 +123,26 @@ int            request::parse_req(std::string   rq, server &server, int fd)
     http_version  = vec[2];
     if (http_version.compare("HTTP/1.1"))
     {
-        state = it->second->resp.response_error("505", fd);    
+        it->second->resp.response_error("505", fd);    
         it->second->not_allow_method = 1;
         return 0;
     } 
     if (it->second->serv_.check_forbidden(path))
     {
-        state = it->second->resp.response_error("400", fd);    
+        it->second->resp.response_error("400", fd);    
         it->second->not_allow_method = 1;
         return 0;        
     }
     if (path == "/favicon.ico")
     {
-        state = it->second->resp.response_error("404", fd);
+        it->second->resp.response_error("404", fd);
         it->second->not_allow_method = 1;
         return 0;
     }
     uri = get_full_uri(server, *it->second);
     if (uri.empty())
     {
-        state = it->second->resp.response_error("404", fd);    
+        it->second->resp.response_error("404", fd);    
         it->second->not_allow_method = 1;
         return 0;
     }
@@ -162,7 +161,7 @@ int            request::parse_req(std::string   rq, server &server, int fd)
     }
     if (check_path_access(uri))
     {
-        state = it->second->resp.response_error("403", fd);    
+        it->second->resp.response_error("403", fd);    
         it->second->not_allow_method = 1;
         return 0;        
     }
@@ -170,12 +169,12 @@ int            request::parse_req(std::string   rq, server &server, int fd)
     {
         if ((method.compare("DELETE") && method.compare("POST") && method.compare("GET")))
         {
-            state = it->second->resp.response_error("501", fd);
+            it->second->resp.response_error("501", fd);
             it->second->not_allow_method = 1;
             return 0;
         }
         if (!method_state && !k){
-            state = it->second->resp.response_error("405", fd);
+            it->second->resp.response_error("405", fd);
             it->second->not_allow_method = 1;
             return 0;
         }
