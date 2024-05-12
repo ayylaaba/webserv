@@ -118,8 +118,26 @@ int request::parse_heade(std::string buffer, server &serv, int fd)
     return 0;
 }
 
+std::string post::keysToLower(std::string str)
+{
+    std::string result = str;
+    bool isKey = true;
+    for (size_t i = 0; i < result.length(); ++i)
+    {
+        if (isKey)
+            result[i] = std::tolower(result[i]);
+        if (result[i] == ':')
+            isKey = false;
+        else if (result[i] == '\n')
+            isKey = true;
+    }
+    return result;
+}
+
+
 void post::parse_header(std::string buffer)
 {
+    buffer = keysToLower(buffer);
     int t = 0;
     std::istringstream stream (buffer);
     std::string line;
@@ -128,18 +146,18 @@ void post::parse_header(std::string buffer)
     transfer_encoding = "";
     while (getline(stream, line))
     {
-        if (line.find("Content-Length:") != std::string::npos)
+        if (line.find("content-length:") != std::string::npos)
         {
             content_length = line.substr(16);
             content_length.erase(content_length.find("\r"));
         }
-        else if (line.find("Content-Type:") != std::string::npos && t == 0)
+        else if (line.find("content-type:") != std::string::npos && t == 0)
         {
             content_type = line.substr(14);
             content_type.erase(content_type.find("\r"));
             t = 1;
         }
-        else if (line.find("Transfer-Encoding:") != std::string::npos)
+        else if (line.find("transfer-encoding:") != std::string::npos)
         {
             transfer_encoding = line.substr(19);
             transfer_encoding.erase(transfer_encoding.find("\r"));

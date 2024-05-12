@@ -52,11 +52,14 @@ public:
     bool boundary(std::string buffer, std::string max_body_size, std::string upload_path);
     bool nameExistsInVector(std::vector<std::string> vec, std::string target);
     std::string parse_boundary_header(std::string buffer);
-    std::string cat_header(std::string buffer);
+    std::string cut_header(std::string buffer);
     bool containsValidCharacters(const std::string& str);
     std::string generateUniqueSuffix();
     std::string generateCgiName();
     bool boundary_CGI(std::string buffer, std::string max_body_size);
+    bool is_valid_hexa(std::string concat);
+    std::string keysToLower(std::string str);
+    bool parsing(std::string buffer, int fd);
 };
 
 #endif

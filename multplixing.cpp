@@ -278,7 +278,7 @@ void        multplixing::lanch_server(server parse)
                             if (close_fd(events[i].data.fd, epoll_fd))
                                 continue ;
                         }
-                    }        //  print "msg" value with red
+                    }
 
                     fd_maps[events[i].data.fd]->u_can_send = 1;
                     if (fd_maps[events[i].data.fd]->is_cgi && !check_cgi) {
