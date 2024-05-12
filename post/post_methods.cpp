@@ -131,6 +131,14 @@ bool post::post_method(std::string buffer, int fd)
         if (transfer_encoding == "chunked")
         {
             chunked_len = 0;
+            if (!is_valid_hexa(buffer))
+            {
+                g = 1;
+                outFile.close();
+                remove((it_->second->requst.upload_path + file).c_str());
+                concat.clear();
+                return true;
+            }
             parse_hexa(buffer);
         }
         else if (transfer_encoding != "chunked" && g == 10)
@@ -153,9 +161,7 @@ bool post::post_method(std::string buffer, int fd)
     else
     {
         if (it_->second->is_cgi && content_type == "multipart/form-data")
-        {
             return boundary_CGI(buffer, (*fd_maps[fd]->requst.it)->max_body);
-        }
         else
             return binary(buffer, (*fd_maps[fd]->requst.it)->max_body, it_->second->requst.upload_path);
     }

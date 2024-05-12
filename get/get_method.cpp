@@ -217,6 +217,17 @@ int    get_method::get_mthod(int fd)
     extention_type = it->second->requst.get_exten_type(it->second->requst.uri);
     StringSize << fileSize;
 
+    err_stat = 0;
+    if (access(it->second->requst.uri.c_str(), F_OK) < 0)
+    {
+        err_stat = it->second->resp.response_error("404", fd);
+        return 1;
+    }
+    if ((access(it->second->requst.uri.c_str(), R_OK) < 0) || (check_path == 2  && !it->second->requst.auto_index_stat))
+    {
+        err_stat = it->second->resp.response_error("403", fd);
+        return 1;
+    }         
     if (check_path == 1)
     {
         if (fd_maps[fd]->cgi_.stat_cgi)
@@ -284,16 +295,6 @@ int    get_method::get_mthod(int fd)
             it->second->rd_done = 1;
             return 1;
         }
-    }
-    else
-    { 
-        err_stat = 0;
-        if (access(it->second->requst.uri.c_str(), F_OK) < 0)
-             err_stat = it->second->resp.response_error("404", fd);
-        if ((access(it->second->requst.uri.c_str(), R_OK) < 0) || (check_path == 2  && !it->second->requst.auto_index_stat))
-            err_stat = it->second->resp.response_error("403", fd);
-        if (err_stat)
-            return 1;
     }
     return 0;
 }
