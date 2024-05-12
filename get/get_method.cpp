@@ -98,12 +98,12 @@ void cgi::sendResponse(int fd, std::string& response, std::string stat, std::str
     std::stringstream iss;
     std::string status = "200 OK";
     if (!fd_maps[fd]->completed) {
+        if (fd_maps[fd]->requst.uri.substr(fd_maps[fd]->requst.uri.find_last_of(".") + 1) == "php")
+            status = getContent(fd_maps[fd]->cgi_.file_out,fd,  contenttype, 1);
         if (fd_maps[fd]->cgi_.is_error) {
             checkcontent = 1;
             response = getErrorPage(fd, stat, status, contenttype);
         }
-        if (fd_maps[fd]->requst.uri.substr(fd_maps[fd]->requst.uri.find_last_of(".") + 1) == "php")
-            status = getContent(fd_maps[fd]->cgi_.file_out,fd,  contenttype, 1);
         iss << response.length();
         std::string responseLength = iss.str();
         std::string httpResponse = "HTTP/1.1 " + status + "\r\n";
@@ -113,8 +113,10 @@ void cgi::sendResponse(int fd, std::string& response, std::string stat, std::str
         httpResponse += "Content-Length: " + responseLength + "\r\n";
         httpResponse += "\r\n";
         if (fd_maps[fd]->cgi_.is_error)
-            httpResponse += response; 
-        int c = send(fd, httpResponse.c_str(), httpResponse.length(), 0); //// add protect please don't forget
+            httpResponse += response;
+        // print with bold green the value of response 
+        std::cout << "\033[1;32m" << httpResponse << "\033[0m" << std::endl;
+        int c = send(fd, httpResponse.c_str(), httpResponse.length(), 0);
         if (c == -1 || c == 0) {
             multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
             return ;
@@ -131,7 +133,7 @@ void cgi::sendResponse(int fd, std::string& response, std::string stat, std::str
         int x = ss.read(buff, 1024).gcount();
         if (x > 0) {
             off += x;
-            int c = send(fd, buff, x, 0);       //// add protect please don't forget
+            int c = send(fd, buff, x, 0);      
             if (c == -1 || c == 0) {
                 off = 0;
                 multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
