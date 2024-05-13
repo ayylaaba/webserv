@@ -53,16 +53,12 @@ int request::parseHost(std::string hst, int fd) {
     port = hst.substr(hst.find(':') + 1);
     if (ip == "localhost")
         ip = "127.0.0.1";
-
-    // ****************** here he should not enter ***********
-
     if ((((server::check_ip(ip) || server::valid_range(port)) && !is_servername) || n != 1) || (port != incoming_port || (ip != incoming_ip && !is_servername))) {
         it3->second->resp.response_error("400", fd);
         multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
         isfdclosed = true;
         return 1;
     }
-    // exit(90);
     if (port == "" || hst.find_first_of(':') == std::string::npos) {
         it3->second->resp.response_error("400", fd);
         multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
@@ -97,18 +93,10 @@ int request::parse_heade(std::string buffer, server &serv, int fd)
     std::vector<std::string> vec = serv.isolate_str(line , ' ');
     method = vec[0];
     path   = vec[1];
-    // if (buffer.find("Host:") == std::string::npos) {
-    //     if (fd_maps[fd]->resp.response_error("400", fd)) {
-    //         if (multplixing::close_fd(fd, fd_maps[fd]->epoll_fd))
-    //             return 1;
-    //     }
-    // }
     int hostt = 0;
-    // std::cout << buffer << std::endl;
     while (getline(stream, line))
     {
         line = post::keysToLower(line);
-        // std::cout << "line => " << line << std::endl;
         if (line.substr(0, 4) == "host" && line.find("host:") != std::string::npos) {
             hostt = 1;
             line.erase(line.find("\r"));
@@ -118,12 +106,10 @@ int request::parse_heade(std::string buffer, server &serv, int fd)
         else if (line.substr(0, 6) == "cookie" && line.find("cookie:") != std::string::npos)
         {
             fd_maps[fd]->cgi_->HTTP_COOKIE = line.substr(8);
-            // fd_maps[fd]->cgi_->HTTP_COOKIE.erase(line.find("\r"));
         }
     }
     if (!hostt)
     {
-        // std::cout << "host: " << hostt << std::endl;
         if (fd_maps[fd]->resp.response_error("400", fd))
         {
             if (multplixing::close_fd(fd, fd_maps[fd]->epoll_fd))

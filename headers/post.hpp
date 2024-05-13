@@ -59,7 +59,6 @@ public:
     bool boundary_CGI(std::string buffer, std::string max_body_size);
     bool is_valid_hexa(std::string concat);
     static std::string keysToLower(std::string str);
-    bool parsing(std::string buffer, int fd);
 };
 
 #endif
