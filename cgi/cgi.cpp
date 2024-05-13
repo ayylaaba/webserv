@@ -40,7 +40,6 @@ void cgi::fillCgiEnv(int fd) {
     }
     env = new char*[env_v.size() + 1];
     for (std::vector<std::string>::iterator it = env_v.begin(); it != env_v.end(); it++) {
-        std::cout << *it << std::endl;
         env[it - env_v.begin()] = strdup(it->c_str());
     }
     env[env_v.size()] = NULL;

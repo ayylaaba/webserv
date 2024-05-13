@@ -95,28 +95,51 @@ void cgi::getphpheader(std::string& status, std::string& contenttype, std::strin
     }
 }
 
+long    checkErrorPage(int fd, std::string state, std::string& body, std::string& contenttype, std::string& contentlength) {
+    if (fd_maps[fd]->err_page.find(state) != fd_maps[fd]->err_page.end()) {
+        contenttype = fd_maps[fd]->requst.extentions[fd_maps[fd]->err_page[state].substr(fd_maps[fd]->err_page[state].find_last_of(".") + 1)];
+        fd_maps[fd]->cgi_->file_out = fd_maps[fd]->err_page[state];
+        long size;
+        if ((size = estimate_file_size(fd_maps[fd]->cgi_->file_out, fd)) == -1) {
+            return -1;
+        }
+        contentlength = to_string(size - headsize);
+        return 1;
+    }
+    else{
+        contentlength = to_string(body.length());
+    }
+    return 0;
+}
+
 int cgi::sendResp(int fd) {
     if (!fd_maps[fd]->completed) {
         std::string status;
         std::string contenttype;
         std::string contentlength;
+        int iserrorpage = 0;
         cookie = "";
         std::string body;
+        long    size;
 
         if (fd_maps[fd]->requst.uri.substr(fd_maps[fd]->requst.uri.find_last_of(".") + 1) == "php" && !fd_maps[fd]->is_error) {
             getphpheader(status, contenttype, cookie);
-            if (estimate_file_size(file_out, fd) == -1) {
+            if ((size = estimate_file_size(file_out, fd)) == -1) {
                 return 1;
             }
-            contentlength = to_string(estimate_file_size(file_out, fd) - headsize);
+            contentlength = to_string(size - headsize);
         }
         else if ((fd_maps[fd]->requst.uri.substr(fd_maps[fd]->requst.uri.find_last_of(".") + 1) == "php") && fd_maps[fd]->is_error) {
             status = "500 Internal Server Error";
             contenttype = "text/html";
             body = "<h1>500 Internal Server Error</h1>";
-            contentlength = to_string(body.length());
+            if (checkErrorPage(fd, "500", body, contenttype, contentlength) == -1) {
+                return 1;
+            }
+            else if (checkErrorPage(fd, "500", body, contenttype, contentlength) == 1)
+                iserrorpage = 1;
         }
-        else if (fd_maps[fd]->requst.uri.substr(fd_maps[fd]->requst.uri.find_last_of(".") + 1) == "py" && !fd_maps[fd]->is_error) {
+        if (fd_maps[fd]->requst.uri.substr(fd_maps[fd]->requst.uri.find_last_of(".") + 1) == "py" && !fd_maps[fd]->is_error) {
             status = "200 OK";
             contenttype = "text/html";
         }
@@ -124,13 +147,21 @@ int cgi::sendResp(int fd) {
             status = "500 Internal Server Error";
             contenttype = "text/html";
             body = "<h1>500 Internal Server Error</h1>";
-            contentlength = to_string(body.length());
+            if (checkErrorPage(fd, "500", body, contenttype, contentlength) == -1) {
+                return 1;
+            }
+            else if (checkErrorPage(fd, "500", body, contenttype, contentlength) == 1)
+                iserrorpage = 1;
         }
         if (fd_maps[fd]->iscgitimeout) {
             status = "504 Gateway Timeout";
             contenttype = "text/html";
             body = "<h1>504 Gateway Timeout</h1>";
-            contentlength = to_string(body.length());
+            if (checkErrorPage(fd, "504", body, contenttype, contentlength) == -1) {
+                return 1;
+            }
+            else if (checkErrorPage(fd, "504", body, contenttype, contentlength) == 1)
+                iserrorpage = 1;
         }
         std::string httpResponse = "HTTP/1.1 " + status + "\r\n";
         if (cookie != "")
@@ -139,10 +170,12 @@ int cgi::sendResp(int fd) {
         httpResponse += "Content-Length: " + contentlength + "\r\n";
         httpResponse += "\r\n";
 
-        if (fd_maps[fd]->is_error || fd_maps[fd]->iscgitimeout) {
+        if ((fd_maps[fd]->is_error || fd_maps[fd]->iscgitimeout) && !iserrorpage) {
             httpResponse += body;
         }
+
         std::cout << httpResponse << std::endl;
+
         int c = send(fd, httpResponse.c_str(), httpResponse.length(), 0);
         fd_maps[fd]->completed = 1;
         fd_maps[fd]->cgi_out.open(file_out.c_str());
@@ -153,7 +186,7 @@ int cgi::sendResp(int fd) {
             multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
             return 0;
         }
-        if (fd_maps[fd]->is_error || fd_maps[fd]->iscgitimeout || !fd_maps[fd]->cgi_out.is_open()) {
+        if (((fd_maps[fd]->is_error || fd_maps[fd]->iscgitimeout) && !iserrorpage) || !fd_maps[fd]->cgi_out.is_open()) {
             headsize = 0;
             fd_maps[fd]->cgi_out.close();
             multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
@@ -180,19 +213,6 @@ int cgi::sendResp(int fd) {
             multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
             return 0;
         }
-        // std::stringstream ss;
-        // ss << output.rdbuf(); //MAKHDAMCH
-        // int x = send(fd, ss.str().c_str(), ss.str().length(), 0);
-        // if (x == -1 || x == 0) {
-        //     output.close();
-        //     multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
-        //     return 0;
-        // }
-        // if (output.eof() || output.gcount() < 1024) {
-        //     output.close();
-        //     multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
-        //     return 0;
-        // }
     }
     return 1;
 }
