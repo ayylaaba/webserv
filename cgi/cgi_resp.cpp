@@ -7,7 +7,7 @@ extern std::map<int, Client *> fd_maps;
 std::ifstream  cgi::output;
 std::string    cgi::file_out;
 std::string    cgi::cookie;
-int headsize;
+int headsize = 0;
 
 std::string to_lower(std::string str) {
     std::transform(str.begin(), str.end(), str.begin(), ::tolower);
@@ -22,7 +22,7 @@ std::string to_string(int num) {
 
 
 long estimate_file_size(const std::string& filename, int fd) {
-    FILE* file = fopen(filename.c_str(), "rb"); // Open in binary mode
+    FILE* file = fopen(filename.c_str(), "rb");
 
     if (!file) {
         if (fd_maps[fd]->resp.response_error("500", fd)) {
@@ -41,7 +41,9 @@ long estimate_file_size(const std::string& filename, int fd) {
     return file_size;
 }
 
-std::string getHeaders(std::ifstream& file) {
+std::string getHeaders() {
+    std::ifstream file;
+    file.open(cgi::file_out.c_str());
     std::string result;
     char nextChar;
 
@@ -53,7 +55,7 @@ std::string getHeaders(std::ifstream& file) {
         break;
         }
     }
-
+    file.close();
     return result;
 }
 
@@ -75,7 +77,7 @@ std::string getBody(std::ifstream& file) {
 
 
 void cgi::getphpheader(std::string& status, std::string& contenttype, std::string& cookie) {
-    std::string header = getHeaders(output);
+    std::string header = getHeaders();
     std::stringstream stream(header);
     std::string line;
     status = "200 OK";
@@ -97,16 +99,22 @@ int cgi::sendResp(int fd) {
     if (!fd_maps[fd]->completed) {
         std::string status;
         std::string contenttype;
-        std::string contentlength = to_string(estimate_file_size(file_out, fd));
+        std::string contentlength;
         cookie = "";
         std::string body;
 
-        if (fd_maps[fd]->requst.uri.substr(fd_maps[fd]->requst.uri.find_last_of(".") + 1) == "php") {
+        if (fd_maps[fd]->requst.uri.substr(fd_maps[fd]->requst.uri.find_last_of(".") + 1) == "php" && !fd_maps[fd]->is_error) {
             getphpheader(status, contenttype, cookie);
             if (estimate_file_size(file_out, fd) == -1) {
                 return 1;
             }
             contentlength = to_string(estimate_file_size(file_out, fd) - headsize);
+        }
+        else if ((fd_maps[fd]->requst.uri.substr(fd_maps[fd]->requst.uri.find_last_of(".") + 1) == "php") && fd_maps[fd]->is_error) {
+            status = "500 Internal Server Error";
+            contenttype = "text/html";
+            body = "<h1>500 Internal Server Error</h1>";
+            contentlength = to_string(body.length());
         }
         else if (fd_maps[fd]->requst.uri.substr(fd_maps[fd]->requst.uri.find_last_of(".") + 1) == "py" && !fd_maps[fd]->is_error) {
             status = "200 OK";
@@ -125,39 +133,56 @@ int cgi::sendResp(int fd) {
             contentlength = to_string(body.length());
         }
         std::string httpResponse = "HTTP/1.1 " + status + "\r\n";
-        httpResponse += "Content-Type: " + contenttype + "\r\n";
         if (cookie != "")
             httpResponse += "Set-Cookie: " + cookie + "\r\n";
+        httpResponse += "Content-Type: " + contenttype + "\r\n";
         httpResponse += "Content-Length: " + contentlength + "\r\n";
         httpResponse += "\r\n";
 
         if (fd_maps[fd]->is_error || fd_maps[fd]->iscgitimeout) {
             httpResponse += body;
         }
+        std::cout << httpResponse << std::endl;
         int c = send(fd, httpResponse.c_str(), httpResponse.length(), 0);
         fd_maps[fd]->completed = 1;
-        output.open(file_out.c_str());
-        output.seekg(0, std::ios::end);
+        fd_maps[fd]->cgi_out.open(file_out.c_str());
+        fd_maps[fd]->cgi_out.seekg(headsize, std::ios::beg);
         if (c == -1 || c == 0) {
-            output.close();
+            headsize = 0;
+            fd_maps[fd]->cgi_out.close();
             multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
             return 0;
         }
-        if (fd_maps[fd]->is_error || fd_maps[fd]->iscgitimeout || !output.is_open()) {
-            output.close();
+        if (fd_maps[fd]->is_error || fd_maps[fd]->iscgitimeout || !fd_maps[fd]->cgi_out.is_open()) {
+            headsize = 0;
+            fd_maps[fd]->cgi_out.close();
             multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
             return 0;
         }
+        headsize = 0;
     }
     else if (fd_maps[fd]->completed) {
-        // char buf[1024];
-        // int c = output.read(buf, 1024).gcount();
-        // if (c == -1 || c == 0) {
-        //     output.close();
-        //     multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
-        //     return 0;
-        // }
-        // int x = send(fd, buf, c, 0);
+        char buf[1024];
+        int c = fd_maps[fd]->cgi_out.read(buf, 1024).gcount();
+        if (c == -1 || c == 0) {
+            fd_maps[fd]->cgi_out.close();
+            multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
+            return 0;
+        }
+        int x = send(fd, buf, c, 0);
+        if (x == -1 || x == 0) {
+            fd_maps[fd]->cgi_out.close();
+            multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
+            return 0;
+        }
+        if (fd_maps[fd]->cgi_out.eof() || fd_maps[fd]->cgi_out.gcount() < 1024) {
+            fd_maps[fd]->cgi_out.close();
+            multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
+            return 0;
+        }
+        // std::stringstream ss;
+        // ss << output.rdbuf(); //MAKHDAMCH
+        // int x = send(fd, ss.str().c_str(), ss.str().length(), 0);
         // if (x == -1 || x == 0) {
         //     output.close();
         //     multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
@@ -168,19 +193,6 @@ int cgi::sendResp(int fd) {
         //     multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
         //     return 0;
         // }
-        std::stringstream ss;
-        ss << output.rdbuf(); //MAKHDAMCH
-        int x = send(fd, ss.str().c_str(), ss.str().length(), 0);
-        if (x == -1 || x == 0) {
-            output.close();
-            multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
-            return 0;
-        }
-        if (output.eof() || output.gcount() < 1024) {
-            output.close();
-            multplixing::close_fd(fd, fd_maps[fd]->epoll_fd);
-            return 0;
-        }
     }
     return 1;
 }

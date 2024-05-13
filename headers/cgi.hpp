@@ -23,12 +23,13 @@ class cgi
         void                                cgi_work(int fd);
         std::vector<std::string>            cgi_env;
         char**                              env;
+        char**                              args;
         std::map<std::string,std::string>   exten_cgi;
         void                                get_exten_type(int fd);
         void                                fill_env_cgi(Client &obj);
         void                                checkifcgi(request& rq, int& iscgi, int fd);
         void                                cgi_method(request& rq, int fd);
-        char **                             fillCgiEnv(int fd);
+        void                                fillCgiEnv(int fd);
         static void                         sendResponse(int fd, std::string& response, std::string stat, std::string& contenttype);
         static int                                 cgiresponse(int fd);
         static int                                 sendResp(int fd);

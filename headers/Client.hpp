@@ -55,6 +55,7 @@ class Client
         int                                 completed;
         int                                 is_error;
         int                                 iscgitimeout;
+        std::ifstream                       cgi_out;
         std::map<std::string, std::string>  err_page;
         Client(std::string uri_);
         Client(const Client& copy);
