@@ -92,8 +92,8 @@ bool post::post_method(std::string buffer, int fd)
         {
             if (it_->second->is_cgi)
             {
-                fd_maps[fd]->cgi_.file_in = generateCgiName();
-                outFile.open(("/tmp/" + fd_maps[fd]->cgi_.file_in).c_str());
+                fd_maps[fd]->cgi_->file_in = generateCgiName();
+                outFile.open(("/tmp/" + fd_maps[fd]->cgi_->file_in).c_str());
                 if (!outFile.is_open())
                 {
                     g = 5;
@@ -113,8 +113,8 @@ bool post::post_method(std::string buffer, int fd)
         }
         else if (it_->second->is_cgi && content_type.substr(0, 19) == "multipart/form-data")
         {
-            fd_maps[fd]->cgi_.file_in = generateCgiName();
-            outFile.open(("/tmp/" + fd_maps[fd]->cgi_.file_in).c_str());
+            fd_maps[fd]->cgi_->file_in = generateCgiName();
+            outFile.open(("/tmp/" + fd_maps[fd]->cgi_->file_in).c_str());
             if (!outFile.is_open())
             {
                 g = 5;

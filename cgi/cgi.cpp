@@ -1,6 +1,6 @@
-#include "headers/Client.hpp"
-#include "headers/cgi.hpp"
-#include "headers/multplixing.hpp"
+#include "../headers/Client.hpp"
+#include "../headers/cgi.hpp"
+#include "../headers/multplixing.hpp"
 extern std::map<int, Client *> fd_maps;
 extern std::vector<void *> garbage;
 
@@ -32,8 +32,8 @@ char **cgi::fillCgiEnv(int fd) {
     env_v.push_back("REQUEST_METHOD=" + fd_maps[fd]->requst.method);
     env_v.push_back("REDIRECT_STATUS=CGI");
     env_v.push_back("PATH_TRANSLATED=" + fd_maps[fd]->requst.uri);
-    env_v.push_back("QUERY_STRING=" + fd_maps[fd]->cgi_.QUERY_STRING);
-    env_v.push_back("HTTP_COOKIE=" + fd_maps[fd]->cgi_.HTTP_COOKIE);
+    env_v.push_back("QUERY_STRING=" + fd_maps[fd]->cgi_->QUERY_STRING);
+    env_v.push_back("HTTP_COOKIE=" + fd_maps[fd]->cgi_->HTTP_COOKIE);
     if (fd_maps[fd]->requst.method == "POST") {
         env_v.push_back("CONTENT_TYPE=" + fd_maps[fd]->post_.content_type);
         env_v.push_back("CONTENT_LENGTH=" + fd_maps[fd]->post_.content_length);
@@ -69,10 +69,6 @@ void    cgi::cgi_method(request& rq, int fd) {
         chdir(current_path.c_str());
         execve(args[0], args, env);
         kill(getpid(), 2);
-    }
-    else {
-        delete [] env;
-        delete [] args;
     }
 }
 

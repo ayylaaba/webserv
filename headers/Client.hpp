@@ -46,13 +46,15 @@ class Client
         post                                post_;
         server                              serv_;
         delete_                             delet;
-        cgi                                 cgi_;
+        cgi*                                 cgi_;
         time_t                              start_time;
         int                                 flagg;
         int                                 err;
         int                                 cgi_post;
         int                                 f;
         int                                 completed;
+        int                                 is_error;
+        int                                 iscgitimeout;
         std::map<std::string, std::string>  err_page;
         Client(std::string uri_);
         Client(const Client& copy);

@@ -117,8 +117,8 @@ int request::parse_heade(std::string buffer, server &serv, int fd)
         }
         else if (line.substr(0, 6) == "cookie" && line.find("cookie:") != std::string::npos)
         {
-            fd_maps[fd]->cgi_.HTTP_COOKIE = line.substr(8);
-            // fd_maps[fd]->cgi_.HTTP_COOKIE.erase(line.find("\r"));
+            fd_maps[fd]->cgi_->HTTP_COOKIE = line.substr(8);
+            // fd_maps[fd]->cgi_->HTTP_COOKIE.erase(line.find("\r"));
         }
     }
     if (!hostt)
