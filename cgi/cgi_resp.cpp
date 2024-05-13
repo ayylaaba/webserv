@@ -173,9 +173,6 @@ int cgi::sendResp(int fd) {
         if ((fd_maps[fd]->is_error || fd_maps[fd]->iscgitimeout) && !iserrorpage) {
             httpResponse += body;
         }
-
-        std::cout << httpResponse << std::endl;
-
         int c = send(fd, httpResponse.c_str(), httpResponse.length(), 0);
         fd_maps[fd]->completed = 1;
         fd_maps[fd]->cgi_out.open(file_out.c_str());
@@ -233,34 +230,32 @@ int  cgi::cgiresponse(int fd) {
         }
         if (WIFSIGNALED(status) || status) {
             fd_maps[fd]->is_error = 1;
-            if (!sendResp(fd)) {
-                isfdclosed = true;
-                return 1;
-            }
+            sendResp(fd);
+            isfdclosed = true;
+            return 1;
         }
         else {
             fd_maps[fd]->is_error = 0;
-            if (!sendResp(fd)) {
-                isfdclosed = true;
-                return 1;
-            }
+            sendResp(fd);
+            isfdclosed = true;
+            return 1;
         }
     }
     else if (fd_maps[fd]->cgi_->stat_cgi && fd_maps[fd]->completed) {
         fd_maps[fd]->is_error = 0;
-        if (!sendResp(fd)) {
-            isfdclosed = true;
-            return 1;
-        }
+        sendResp(fd);
+        isfdclosed = true;
+        return 1;
     }
     else if (difftime(end, fd_maps[fd]->cgi_->start_time) > 7) {
         fd_maps[fd]->completed = 0;
         fd_maps[fd]->iscgitimeout = 1;
         fd_maps[fd]->is_error = 1;
-        if (!sendResp(fd)) {
-            isfdclosed = true;
-            return 1;
-        }
+        kill(fd_maps[fd]->cgi_->clientPid, 9);
+        waitpid(fd_maps[fd]->cgi_->clientPid, NULL, 0);
+        sendResp(fd);
+        isfdclosed = true;
+        return 1;
     }
     else {
         fd_maps[fd]->rd_done = 0;

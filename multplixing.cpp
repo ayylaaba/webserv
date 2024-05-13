@@ -174,6 +174,7 @@ void        multplixing::lanch_server(server parse)
                     {
                         if (fd_maps[events[i].data.fd]->buf.find("\r\n\r\n") != std::string::npos)
                         {
+                            std::cout << fd_maps[events[i].data.fd]->buf << std::endl;
                             fd_maps[events[i].data.fd]->flagg = 1;
                             if (rq.parse_req(fd_maps[events[i].data.fd]->buf, parse, events[i].data.fd ) == 1) {
                                         continue ;

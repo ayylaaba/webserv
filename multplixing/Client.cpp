@@ -43,7 +43,7 @@ Client::~Client()
 {
     kill(cgi_->clientPid, 9);
     waitpid(cgi_->clientPid, NULL, 0);
-    unlink(cgi_->file_out.c_str());
+    remove(cgi_->file_out.c_str());
     delete cgi_;
 }
 
