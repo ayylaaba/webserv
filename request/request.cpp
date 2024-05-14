@@ -111,6 +111,9 @@ int            request::parse_req(std::string   rq, server &server, int fd)
     it->second->resp.response_message = server.response_message;
 
     last          = rq.find("\r\n");
+
+    std::cout << "\033[1;31m" << rq.substr(0, last) << "\033[0m" << std::endl;
+
     vec           = server.isolate_str(rq.substr(0, last) , ' ');
     if (vec.size() != 3 || last == std::string::npos)
     {
@@ -232,13 +235,10 @@ std::string     request::get_full_uri(server &server, Client& obj)
         {
             cgi_map = (*it)->l[j]->cgi_map;
             if (one_of_allowed(method, (*it)->l[j]->allowed_methods))
-                method_state = true;
-            if (!(*it)->l[j]->redirction_path.empty() && redirection_stat == 0)
-            {
-                obj.redirec_path = (*it)->l[j]->redirction_path;
-                (*it)->l[j]->redirction_path.clear();
+                method_state = true;    
+            obj.redirec_path = (*it)->l[j]->redirction_path;
+            if (!obj.redirec_path.empty() && redirection_stat == 0)
                 redirection_stat = 1;
-            }
             break ;
         }
     }
@@ -285,7 +285,7 @@ int           request::rewrite_location(std::map<std::string, std::string> locat
             else
             {
                 std::map<std::string, std::string>::iterator indx = location_map.find("index");
-                if (indx != location_map.end())
+                if (indx != location_map.end() && method == "GET")
                 {
                     full_path = (*it_b).second + "/" + (*indx).second; 
                     check = 1;
