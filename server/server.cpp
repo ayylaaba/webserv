@@ -233,6 +233,7 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
                 check_dup();
                 cont_l.clear();
                 redirction_path.clear();
+                cgi_map.clear();
                 v_s.clear();
                 break ;
             }

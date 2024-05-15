@@ -45,6 +45,7 @@ class cgi
         std::string                         extension;
         static std::ifstream                output;
         static std::string                  cookie;
+        bool                                cgi_error;
 
         // Envirement //
         std::string                         REQUEST_METHOD;

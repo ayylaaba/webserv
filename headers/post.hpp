@@ -32,6 +32,29 @@ public:
     std::string transfer_encoding;
     std::string content_length;
     std::string content_type;
+    std::ofstream outFile;
+    std::string extension;
+    std::string file;
+
+    // for binary;
+    ssize_t body_size;
+
+    // for chunked;
+    size_t chunk_length;
+    std::stringstream ss;
+    std::string hexa;
+    std::string concat;
+    int chunked_len;
+    std::string sep;
+
+    // boundary;
+    int v;
+    std::string CType;
+    std::string name;
+    std::vector<std::string> vec;
+    int suffix;
+    long len;
+
     int g;
     int j;
 	post();

@@ -24,6 +24,7 @@ void    cgi::checkifcgi(request& rq, int& iscgi, int fd) {
         compiler = fd_maps[fd]->requst.cgi_map[file.substr(file.find_last_of(".") + 1)];
         extension = file.substr(file.find_last_of(".") + 1);
     }
+    fd_maps[fd]->requst.cgi_map.clear();
 }
 
 void cgi::fillCgiEnv(int fd) {
@@ -35,8 +36,8 @@ void cgi::fillCgiEnv(int fd) {
     env_v.push_back("QUERY_STRING=" + fd_maps[fd]->cgi_->QUERY_STRING);
     env_v.push_back("HTTP_COOKIE=" + fd_maps[fd]->cgi_->HTTP_COOKIE);
     if (fd_maps[fd]->requst.method == "POST") {
-        env_v.push_back("CONTENT_TYPE=" + fd_maps[fd]->post_.content_type);
-        env_v.push_back("CONTENT_LENGTH=" + fd_maps[fd]->post_.content_length);
+        env_v.push_back("CONTENT_TYPE=" + fd_maps[fd]->post_->content_type);
+        env_v.push_back("CONTENT_LENGTH=" + fd_maps[fd]->post_->content_length);
     }
     env = new char*[env_v.size() + 1];
     for (std::vector<std::string>::iterator it = env_v.begin(); it != env_v.end(); it++) {

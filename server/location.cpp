@@ -22,7 +22,7 @@ int     location::check_exist(std::string path)
 void            location::print_err(std::string str)
 {
     std::cerr << str << std::endl;
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 void        location::check_dup()

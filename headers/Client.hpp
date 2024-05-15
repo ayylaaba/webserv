@@ -43,7 +43,7 @@ class Client
         get_method                          get;
         request                             requst;
         response                            resp;
-        post                                post_;
+        post                                *post_;
         server                              serv_;
         delete_                             delet;
         cgi*                                 cgi_;
